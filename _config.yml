@@ -15,7 +15,7 @@ tagline: Site Tagline
 author :
   name : Javran Wayik
   email : test@test.com
-  github : Javran
+  github : false
   twitter : false
   feedburner : false
 

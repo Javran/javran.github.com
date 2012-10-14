@@ -1,7 +1,6 @@
 ---
 layout: page
-title: Javrania
-tagline: no more than thoughts
+title: Home
 ---
 {% include JB/setup %}
 
