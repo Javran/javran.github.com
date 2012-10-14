@@ -4,8 +4,6 @@ title: Javrania
 tagline: no more than thoughts
 ---
 {% include JB/setup %}
-  
-## Posts list
 
 <ul class="posts">
   {% for post in site.posts %}
