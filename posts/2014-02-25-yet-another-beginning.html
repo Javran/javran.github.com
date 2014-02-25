@@ -8,7 +8,7 @@
     <meta name="author" content>
     <link rel="shortcut icon" href="assets/ico/favicon.ico">
 
-    <title>Javrania - Posts tagged &quot;thought&quot;</title>
+    <title>Javrania - Yet another beginning</title>
 
     <!-- Bootstrap core CSS -->
     <link href="../css/bootstrap.min.css" rel="stylesheet">
@@ -52,36 +52,44 @@
 
       <div id="content">
         <div class="page-header">
-          <h1>Posts tagged &quot;thought&quot;</h1>
+          <h1>Yet another beginning</h1>
         </div>
-        <ul>
+        <span class="blog-date">
+    2014-02-25 - 
+</span>
+<span class="blog-tag">
     
-        <li>
-            <div class="blog-description">
-            <a href="../posts/2014-02-25-yet-another-beginning.html">Yet another beginning</a> - 2014-02-25
-            </div>
-        </li>
+        [ 
+        <a href="../tags/thought.html">thought</a>
+        ]
     
-        <li>
-            <div class="blog-description">
-            <a href="../posts/2013-04-19-keep-thinking.html">Keep thinking</a> - 2013-04-19
-            </div>
-        </li>
-    
-        <li>
-            <div class="blog-description">
-            <a href="../posts/2012-10-19-game-of-thinking.html">Game of thinking</a> - 2012-10-19
-            </div>
-        </li>
-    
-        <li>
-            <div class="blog-description">
-            <a href="../posts/2012-10-13-another-begining.html">Another beginning</a> - 2012-10-13
-            </div>
-        </li>
-    
-</ul>
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>I think it's not surprising if I say I've made my decision(again) to restart writing blogs and keeping track of my personal pages.</p>
+<p>This time I switch from <a href="https://github.com/jekyll/jekyll">jekyll</a> to <a href="http://jaspervdj.be/hakyll/">hakyll</a>. It doesn't mean jekyll is not a good choice, this is just because I feel like becoming a Haskell fans and of course I'd like to get more involved with Haskell stuffs. Hakyll, in this sense, fits me better.</p>
+<p>These days I did some sort of work to apply some themes to make my hakyll site looks better. And the final choice I come up with is to use <a href="http://getbootstrap.com/">bootstrap</a> for a basic framework, and use <a href="http://www.lavishbootstrap.com/">lavish</a> to make my own theme.</p>
+<p>After I felt good about how the website looks, I moved my past posts from jekyll to hakyll, which is actually quite easy and just quites few lines of changes. It's great that Hakyll uses <a href="http://johnmacfarlane.net/pandoc/">pandoc</a> , which is another fascinating project written in Haskell, to deal with HTML file generating. Pandoc just makes the data migration smooth and in addition makes more source file formats available (I think this is a big win comparing with jekyll).</p>
+<p>And then some other stuffs like tags were implemented last weekends, but unfortunately when I start searching for tutorials about how can I enable tags in Hakyll, there is not much documents that I can refer to. Hakyll does have some documents lying in Hackage, but I believe that these documents are incomplete and insufficient to work out all the details.</p>
+<p>The most helpful thing provided by Hakyll's website finally turns out to be <a href="http://jaspervdj.be/hakyll/examples.html">these example websites with source codes</a>. I figured out how to add and organize tags by looking at some source codes from these websites.</p>
+<p>So the next thing I can think about, is to write a tutorial about how I add tags to my own blog. I believe this will familiarize myself with Hakyll, and make more features available to Hakyll newbies like me.</p>
+<p>However, you should never expect that tutorial coming out quickly, as things are getting me really busy these days.</p>
+</div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'javrania'; // required: replace example with your forum shortname
 
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+ var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+ })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 
       </div>
       
