@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content>
+    <meta name="author" content>
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+
+    <title>Javrania - Add tags to your Hakyll blog</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+
+    <link href="../css/lavish-bootstrap.css" rel="stylesheet">
+    <link href="../css/blog.css" rel="stylesheet">
+    <link href="../css/no-transition.css" rel="stylesheet">
+    <link href="../css/default.css" rel="stylesheet">
+    <link href="../css/hk-pyg.css" rel="stylesheet">
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    
+    <script type="text/javascript">var switchTo5x=true;</script>
+    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+    <script type="text/javascript">stLight.options(
+      { publisher: "eff44467-2bf3-4542-8683-950d62a7d47d"
+      , doNotHash: false
+      , doNotCopy: false
+      , onhover: false
+      , hashAddressBar: false});
+    </script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">Javrania</a>
+        </div>
+        <div class="collapse navbar-collapse no-transition">
+          <ul class="nav navbar-nav">
+            <!-- <li class="active"><a href="#">Home</a></li> -->
+            <li><a href="../">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../archive.html">Archive</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+      <div id="content">
+        <div class="page-header">
+          <h1>Add tags to your Hakyll blog</h1>
+        </div>
+        <span class="blog-date">
+    2014-03-01 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="../tags/hakyll.html">hakyll</a>, <a href="../tags/haskell.html">haskell</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>As promised, here is a simple tutorial about adding tag supports to your Hakyll blog.</p>
+<p>Few things before we start:</p>
+<ul>
+<li><p>My Hakyll version used for this article is <code>4.4.3.2</code>, other versions shouldn't have much difference.</p></li>
+<li><p>If this article looks too verbose, you can just look at <strong>bold sentences</strong>.</p></li>
+<li><p>All the changes done below is contained <a href="../assets/add-tags-mondo.tar.bz2">in this archive</a>. You can download, run it and skip rest of this article.</p></li>
+</ul>
+<p>Let's start from scratch to keep it as simple as possible.</p>
+<p>So we initialize a new Hakyll website.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># initialize the website under dir `mondo`</span>
+$ <span class="kw">hakyll-init</span> mondo
+$ <span class="kw">cd</span> mondo
+<span class="co"># compile the code necessary,</span>
+<span class="co"># in order to see the website.</span>
+$ <span class="kw">ghc</span> site</code></pre>
+<h1 id="write-tags-in-posts">Write tags in posts</h1>
+<p>To create tags, we should first learn how to add tags to our posts, this step is easy, look at <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html">the document for tags</a>, it should begin with <code>tags:</code> followed with a comma-separated list.</p>
+<p>Now, let's modify posts from <code>mondo/posts</code>:</p>
+<p><code>mondo/posts/2012-08-12-spqr.markdown</code>:</p>
+<pre><code>---
+title: S.P.Q.R.
+tags: foo, bar1, bar2
+---</code></pre>
+<p><code>mondo/posts/2012-10-07-rosa-rosa-rosam.markdown</code>:</p>
+<pre><code>---
+title: Rosa Rosa Rosam
+author: Ovidius
+tags: bar1
+---</code></pre>
+<p><code>mondo/post/2012-11-28-carpe-diem.markdown</code>:</p>
+<pre><code>---
+title: Carpe Diem
+tags: bar2, foo
+---</code></pre>
+<p><code>mondo/posts/2012-12-07-tu-quoque.markdown</code>:</p>
+<pre><code>---
+title: Tu Quoque
+author: Julius
+tags: bar1, bar2
+---</code></pre>
+<h1 id="fetch-metadata-from-our-posts">Fetch metadata from our posts</h1>
+<p>Now we've assigned tags to the posts, next thing is to make them accessible from Haskell codes.</p>
+<p>Before we go through all the posts and generate pages, we should build tags using <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#v:buildTags"><code>buildTags</code></a>.</p>
+<p>Unforuntately this function is not well-documented, a short explanation would be : <code>buildTags pattern makeId</code> finds all tags from posts captured by <code>pattern</code>, converts each tag to a corresponding <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Core-Identifier.html#t:Identifier"><code>Identifier</code></a> by using <code>makeId</code> and returns a value of type <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#t:Tags"><code>Tags</code></a>.</p>
+<p>From <code>site.hs</code> file, <strong>find these lines</strong>:</p>
+<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+25
+26
+27
+28
+29
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell">    match <span class="st">&quot;posts/*&quot;</span> <span class="fu">$</span> <span class="kw">do</span>
+        route <span class="fu">$</span> setExtension <span class="st">&quot;html&quot;</span>
+        compile <span class="fu">$</span> pandocCompiler
+            <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    postCtx
+            <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> postCtx
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+<p>Insert the following code in front of it:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
+tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre>
+<p>The code region above says: find all tags by searching the metadate of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
+<p>After tags are generated, we need to tell the post generator to include the corresponding tag informations for each tag, this is done by modifying <code>postCtx</code>. (for now you don't have to understand the detail of <code>postCtx</code> if you just want to setup up tags.)</p>
+<p>Put the following definition somewhere in your <code>site.hs</code>, I choose to put it right after the definition of <code>postCtx</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
+postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;tags&quot;</span> tags <span class="ot">`mappend`</span> postCtx</code></pre>
+<p>And then change all the occurrence of <code>postCtx</code> inside the code region mentioned above.</p>
+<p>After this change, <strong>the code region should look like</strong>:</p>
+<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+25
+26
+27
+28
+29
+30
+31
+32
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell">    <span class="co">-- build up tags</span>
+    tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)
+
+    match <span class="st">&quot;posts/*&quot;</span> <span class="fu">$</span> <span class="kw">do</span>
+        route <span class="fu">$</span> setExtension <span class="st">&quot;html&quot;</span>
+        compile <span class="fu">$</span> pandocCompiler
+            <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    (postCtxWithTags tags)
+            <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> (postCtxWithTags tags)
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+<h1 id="template-pages">Template pages</h1>
+<p>Now we need to add some changes to our templates, to make tags visible.</p>
+<p>I think the following changes in this section are self-explanatory even if you knows nothing about how template works. So Let's go though them quickly.</p>
+<p><strong>Modify your <code>templates/post.html</code> to make it looks like</strong>:</p>
+<pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
+    Posted on $date$
+    $if(author)$
+        by $author$
+    $endif$
+<span class="kw">&lt;/div&gt;</span>
+<span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
+    $if(tags)$
+    Tags: $tags$
+    $endif$
+<span class="kw">&lt;/div&gt;</span>
+
+$body$</code></pre>
+<p>Now we create the template for tag pages which lists all posts containing the corresponding tags. Since we already have a template for listing posts(<code>template/post-list.html</code>), we can simply reuse it.</p>
+<p>This is done by <strong>creating a new file: <code>templates/tag.html</code>, with the following content</strong>:</p>
+<pre class="sourceCode html"><code class="sourceCode html">$partial(&quot;templates/post-list.html&quot;)$</code></pre>
+<h1 id="generate-tag-pages">Generate tag pages</h1>
+<p>This is the final step, we generate tag pages based on the templates we've written.</p>
+<p><strong>Put the following code somewhere after we build up <code>tags</code>,</strong> I choose to place it right after the line <code>tags &lt;- buildTags</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">    tagsRules tags <span class="fu">$</span> \tag pattern <span class="ot">-&gt;</span> <span class="kw">do</span>
+        <span class="kw">let</span> title <span class="fu">=</span> <span class="st">&quot;Posts tagged \&quot;&quot;</span> <span class="fu">++</span> tag <span class="fu">++</span> <span class="st">&quot;\&quot;&quot;</span>
+        route idRoute
+        compile <span class="fu">$</span> <span class="kw">do</span>
+            posts <span class="ot">&lt;-</span> recentFirst <span class="fu">=&lt;&lt;</span> loadAll pattern
+            <span class="kw">let</span> ctx <span class="fu">=</span> constField <span class="st">&quot;title&quot;</span> title
+                      <span class="ot">`mappend`</span> listField <span class="st">&quot;posts&quot;</span> postCtx (return posts)
+                      <span class="ot">`mappend`</span> defaultContext
+
+            makeItem <span class="st">&quot;&quot;</span>
+                <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/tag.html&quot;</span> ctx
+                <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> ctx
+                <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre>
+<p>Now it's done, recompile <code>site.hs</code> and have fun!</p>
+<h1 id="result">Result</h1>
+<p>Few screenshots after we adding tags:</p>
+<div class="figure">
+<img src="../assets/add-tags-result-1.jpg" alt="Inside posts" /><p class="caption">Inside posts</p>
+</div>
+<div class="figure">
+<img src="../assets/add-tags-result-2.jpg" alt="Tag page" /><p class="caption">Tag page</p>
+</div>
+<p>I also provide the final version of <code>mondo</code> directory <a href="../assets/add-tags-mondo.tar.bz2">here</a>.</p>
+<h1 id="acknowledgement">Acknowledgement</h1>
+<p>Thanks for the big help from <a href="https://github.com/eakron/variadic.me">the source code</a> of <a href="https://variadic.me/">variadic.me</a>.</p>
+</div>
+
+<br /><br />
+<div class="pull-right">
+<span class="st_blogger_large" displayText="Blogger"></span>
+<span class="st_delicious_large" displayText="Delicious"></span>
+<span class="st_facebook_large" displayText="Facebook"></span>
+<span class="st_reddit_large" displayText="Reddit"></span>
+<span class="st_sina_large" displayText="Sina"></span>
+<span class="st_twitter_large" displayText="Tweet"></span>
+<span class="st_wordpress_large" displayText="WordPress"></span>
+</div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'javrania'; // required: replace example with your forum shortname
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+ var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+ })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+      </div>
+      
+
+    </div><!-- /.container -->
+
+
+    <div class="blog-footer">
+        Site proudly generated by
+        <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        <br />
+        Powered by
+        <a href="http://getbootstrap.com/">Bootstrap</a>
+        <br />
+        Colorized by
+        <a href="http://www.lavishbootstrap.com/">Lavish</a>
+        <br />
+                <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type">Javrania</span>
+        by <a xmlns:cc="http://creativecommons.org/ns#" href="https://github.com/Javran" property="cc:attributionName" rel="cc:attributionURL">Javran Cheng</a>
+        is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">Creative Commons Attribution 4.0 International License</a>.
+        <br /><br />
+        <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">
+            <img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />
+
+    </div>
+    <!-- Bootstrap core JavaScript
+         ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+  </body>
+</html>
