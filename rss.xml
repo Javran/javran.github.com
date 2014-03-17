@@ -6,8 +6,195 @@
         <description><![CDATA[Javran's blog]]></description>
         <atom:link href="http://javran.github.io//rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sat, 08 Mar 2014 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 17 Mar 2014 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Capture the notion of invertible functions</title>
+    <link>http://javran.github.io//posts/2014-03-17-capture-the-notion-of-invertible-functions.html</link>
+    <description><![CDATA[<span class="blog-date">
+    2014-03-17 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="/tags/haskell.html">haskell</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<h1 id="intro">Intro</h1>
+<p>This article is originally posted on <a href="http://codereview.stackexchange.com/questions/44550/capture-the-notion-of-invertible-functions">Code Review</a>. And I think this can also be a good post.</p>
+<h1 id="motivation">Motivation</h1>
+<p>I find sometimes it is useful to capture the notion of invertible functions.</p>
+<p>The idea is that if two functions <code>f :: a -&gt; b</code> and <code>g :: b -&gt; a</code> are the inverse function of each other, and if there is another function <code>h :: b -&gt; b</code>, then <code>h</code> can also work on values of type <code>a</code>.</p>
+<p>Moreover, if there<code>f'</code> and <code>g'</code> are another pair of functions that are the inverse function of each other, <code>(f,g)</code> and <code>(f',g')</code> can actually be composed to <code>(f' . f, g . g')</code> and the invertibility still holds.</p>
+<p>The following is my attempt to implement this in haskell, and I’m wondering if an existing library can do the same thing (or even more general thing) for me. Also advice and comments about my code are appreciated.</p>
+<h1 id="implemnetation">Implemnetation</h1>
+<p>First I use records to store two functions:</p>
+<pre class="hasekll"><code>data Invertible a b = Invertible
+    { into :: a -&gt; b
+    , back :: b -&gt; a
+    }</code></pre>
+<p><code>into</code> means “convert a into b” while <code>back</code> means “convert b back to a”.</p>
+<p>And then few helper functions:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selfInv ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">Invertible</span> a a
+selfInv f <span class="fu">=</span> <span class="dt">Invertible</span> f f
+
+<span class="ot">flipInv ::</span> <span class="dt">Invertible</span> a b <span class="ot">-&gt;</span> <span class="dt">Invertible</span> b a
+flipInv (<span class="dt">Invertible</span> f g) <span class="fu">=</span> <span class="dt">Invertible</span> g f
+
+<span class="ot">borrow ::</span> <span class="dt">Invertible</span> a b <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a
+borrow (<span class="dt">Invertible</span> fIn fOut) g <span class="fu">=</span> fOut <span class="fu">.</span> g <span class="fu">.</span> fIn
+
+<span class="ot">liftInv ::</span> (<span class="dt">Functor</span> f) <span class="ot">=&gt;</span> <span class="dt">Invertible</span> a b <span class="ot">-&gt;</span> <span class="dt">Invertible</span> (f a) (f b)
+liftInv (<span class="dt">Invertible</span> a b) <span class="fu">=</span> <span class="dt">Invertible</span> (fmap a) (fmap b)</code></pre>
+<p>In the above code <code>borrow</code> will use the pair of functions to make its last argument <code>g</code> available to values of type <code>a</code>. And changing <code>borrow f</code> to <code>borrow (flipInv f)</code> will make <code>g</code> available to values of type <code>b</code>. Therefore <code>borrow</code> captures my initial idea of making a function of type <code>b -&gt; b</code> available for values of <code>a</code> if <code>a</code> and <code>b</code> can be converted to each other.</p>
+<p>In addition, <code>Invertible</code> forms a monoid-like structure, I use <code>rappend</code> and <code>rempty</code> to suggest a similiarity between it and <code>Monoid</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">rempty ::</span> <span class="dt">Invertible</span> a a
+rempty <span class="fu">=</span> selfInv id
+
+<span class="ot">rappend ::</span> <span class="dt">Invertible</span> a b
+        <span class="ot">-&gt;</span> <span class="dt">Invertible</span> b c
+        <span class="ot">-&gt;</span> <span class="dt">Invertible</span> a c
+(<span class="dt">Invertible</span> f1 g1) <span class="ot">`rappend`</span> (<span class="dt">Invertible</span> f2 g2) <span class="fu">=</span>
+    <span class="dt">Invertible</span> (f2 <span class="fu">.</span> f1) (g1 <span class="fu">.</span> g2)</code></pre>
+<h1 id="examples">Examples</h1>
+<p>Here I have two examples to demonstrate that <code>Invertible</code> might be useful.</p>
+<h2 id="data-encryption">Data Encryption</h2>
+<p>It is natural that <code>Invertible</code> can be used under scenario of symmetric encryption. <code>Invertible (encrypt key) (decrypt key)</code> might be one instance if:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">encrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span>
+<span class="ot">decrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span></code></pre>
+<p>To simplify a little, I make an example of <a href="https://en.wikipedia.org/wiki/Caesar_Cipher">Caesar cipher</a> and assume that plain text contains only uppercase letters:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- constructor should be invisible from outside</span>
+<span class="kw">newtype</span> <span class="dt">OnlyUpper</span> a <span class="fu">=</span> <span class="dt">OnlyUpper</span>
+    {<span class="ot"> getOU ::</span> [a]
+    } <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>, <span class="dt">Functor</span>)
+
+<span class="ot">ouAsList ::</span> <span class="dt">Invertible</span> (<span class="dt">OnlyUpper</span> a) [a]
+ouAsList <span class="fu">=</span> <span class="dt">Invertible</span> getOU <span class="dt">OnlyUpper</span>
+
+<span class="ot">onlyUpper ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">OnlyUpper</span> <span class="dt">Char</span>
+onlyUpper <span class="fu">=</span> <span class="dt">OnlyUpper</span> <span class="fu">.</span> filter isAsciiUpper
+
+<span class="ot">upperAsOrd ::</span> <span class="dt">Invertible</span> <span class="dt">Char</span> <span class="dt">Int</span>
+upperAsOrd <span class="fu">=</span> <span class="dt">Invertible</span> ord&#39; chr&#39;
+    <span class="kw">where</span>
+        ord&#39; x <span class="fu">=</span> ord x <span class="fu">-</span> ord <span class="ch">&#39;A&#39;</span>
+        chr&#39; x <span class="fu">=</span> chr (x <span class="fu">+</span> ord <span class="ch">&#39;A&#39;</span>)</code></pre>
+<p>And Caesar Cipher is basically doing some modular arithmetic:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">modShift ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Invertible</span> <span class="dt">Int</span> <span class="dt">Int</span>
+modShift base offset <span class="fu">=</span> <span class="dt">Invertible</span> f g
+    <span class="kw">where</span>
+        f x <span class="fu">=</span> (x <span class="fu">+</span> offset) <span class="ot">`mod`</span> base
+        g y <span class="fu">=</span> (y <span class="fu">+</span> (base <span class="fu">-</span> offset)) <span class="ot">`mod`</span> base
+
+<span class="ot">caesarShift ::</span> <span class="dt">Invertible</span> <span class="dt">Int</span> <span class="dt">Int</span>
+caesarShift <span class="fu">=</span> modShift <span class="dv">26</span> <span class="dv">4</span>
+
+<span class="ot">caesarCipher ::</span> <span class="dt">Invertible</span> (<span class="dt">OnlyUpper</span> <span class="dt">Char</span>) (<span class="dt">OnlyUpper</span> <span class="dt">Char</span>)
+caesarCipher <span class="fu">=</span> liftInv (upperAsOrd
+                       <span class="co">-- Char &lt;-&gt; Int</span>
+                       <span class="ot">`rappend`</span> caesarShift
+                       <span class="co">-- Int &lt;-&gt; Int</span>
+                       <span class="ot">`rappend`</span> flipInv upperAsOrd)
+                       <span class="co">-- Int &lt;-&gt; Char</span></code></pre>
+<p>One way to use <code>Invertible</code> is just using its <code>into</code> and <code>back</code> as <code>encrypt</code> and <code>decrypt</code>, and <code>Invertible</code> also gives you the power of manipulating encrypyed data as if it was plain text:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">exampleCaesar ::</span> <span class="dt">IO</span> ()
+exampleCaesar <span class="fu">=</span> <span class="kw">do</span>
+    <span class="kw">let</span> encF <span class="fu">=</span> into caesarCipher
+        decF <span class="fu">=</span> back caesarCipher
+        encrypted <span class="fu">=</span> encF (onlyUpper <span class="st">&quot;THEQUICKBROWNFOX&quot;</span>)
+        decrypted <span class="fu">=</span> decF encrypted
+        encrypted&#39; <span class="fu">=</span> borrow (flipInv caesarCipher
+                             <span class="ot">`rappend`</span> ouAsList) (<span class="fu">++</span> <span class="st">&quot;JUMPSOVERTHELAZYDOG&quot;</span>) encrypted
+        decrypted&#39; <span class="fu">=</span> decF encrypted&#39;
+
+    print encrypted
+    <span class="co">-- OnlyUpper {getOU = &quot;XLIUYMGOFVSARJSB&quot;}</span>
+    print decrypted
+    <span class="co">-- OnlyUpper {getOU = &quot;THEQUICKBROWNFOX&quot;}</span>
+
+    print encrypted&#39;
+    <span class="co">-- OnlyUpper {getOU = &quot;XLIUYMGOFVSARJSBNYQTWSZIVXLIPEDCHSK&quot;}</span>
+    print decrypted&#39;
+    <span class="co">-- OnlyUpper {getOU = &quot;THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG&quot;}</span></code></pre>
+<h2 id="matrix-manipulation">Matrix manipulation</h2>
+<p>Sometimes it’s convenient to write some code that manipulates matrices using <code>Invertible</code>.</p>
+<p>Say there is a list of type <code>[Int]</code> in which <code>0</code> stands for an empty cell, and we want every non-zero element move to their leftmost possible position while preserving the order:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">compactLeft ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+compactLeft xs <span class="fu">=</span> nonZeros <span class="fu">++</span> replicate (((<span class="fu">-</span>) <span class="ot">`on`</span> length) xs nonZeros) <span class="dv">0</span>
+    <span class="kw">where</span> nonZeros <span class="fu">=</span> filter (<span class="fu">/=</span> <span class="dv">0</span>) xs</code></pre>
+<p>Now consider 2D matrices, we want to “gravitize” the matrix so that every non-zero element in it falls to {left,right,up,down}-most possible position while preserving the order.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Dir</span> <span class="fu">=</span> <span class="dt">DU</span> <span class="fu">|</span> <span class="dt">DD</span> <span class="fu">|</span> <span class="dt">DL</span> <span class="fu">|</span> <span class="dt">DR</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>, <span class="dt">Show</span>, <span class="dt">Bounded</span>)
+<span class="ot">gravitizeMat ::</span> <span class="dt">Dir</span> <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]] <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]]
+gravitizeMat dir <span class="fu">=</span> borrow invertible (map compactLeft)
+    <span class="kw">where</span> mirrorI <span class="fu">=</span> selfInv (map reverse)
+        diagonalI <span class="fu">=</span> selfInv transpose
+        invertible <span class="fu">=</span> <span class="kw">case</span> dir <span class="kw">of</span>
+            <span class="dt">DL</span> <span class="ot">-&gt;</span> rempty
+            <span class="dt">DR</span> <span class="ot">-&gt;</span> mirrorI
+            <span class="dt">DU</span> <span class="ot">-&gt;</span> diagonalI
+            <span class="dt">DD</span> <span class="ot">-&gt;</span> diagonalI <span class="ot">`rappend`</span> mirrorI</code></pre>
+<p>here <code>Invertible</code> comes into play by the observation that <code>transpose</code> and <code>map reverse</code> are all invertible (moreover, they are inverse functions of themselves). So that we can tranform matrices and pretend the problem is only “gravitize to the left”.</p>
+<p>Here is one example:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">print2DMat ::</span> (<span class="dt">Show</span> a) <span class="ot">=&gt;</span> [[a]] <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+print2DMat mat <span class="fu">=</span> <span class="kw">do</span>
+    putStrLn <span class="st">&quot;Matrix: [&quot;</span>
+    mapM_ print mat
+    putStrLn <span class="st">&quot;]&quot;</span>
+
+<span class="ot">exampleMatGravitize ::</span> <span class="dt">IO</span> ()
+exampleMatGravitize <span class="fu">=</span> <span class="kw">do</span>
+    <span class="kw">let</span> mat <span class="fu">=</span> [ [<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">2</span>,<span class="dv">0</span>]
+              , [<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">0</span>]
+              , [<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">5</span>]
+              ]
+    print2DMat mat
+
+    <span class="kw">let</span> showExample d <span class="fu">=</span> <span class="kw">do</span>
+            putStrLn <span class="fu">$</span> <span class="st">&quot;Direction: &quot;</span> <span class="fu">++</span> show d
+            print2DMat <span class="fu">$</span> gravitizeMat d mat
+
+    mapM_ showExample [minBound <span class="fu">..</span> maxBound]</code></pre>
+<p>And the result will be:</p>
+<pre><code>Matrix: [
+[1,0,2,0]
+[0,3,4,0]
+[0,0,0,5]
+]
+Direction: DU
+Matrix: [
+[1,3,2,5]
+[0,0,4,0]
+[0,0,0,0]
+]
+Direction: DD
+Matrix: [
+[0,0,0,0]
+[0,0,2,0]
+[1,3,4,5]
+]
+Direction: DL
+Matrix: [
+[1,2,0,0]
+[3,4,0,0]
+[5,0,0,0]
+]
+Direction: DR
+Matrix: [
+[0,0,1,2]
+[0,0,3,4]
+[0,0,0,5]
+]</code></pre>
+<h1 id="complete-code">Complete code</h1>
+<p>You can find my complete code from <a href="https://gist.github.com/Javran/9593215">gist</a>).</p>
+</div>
+]]></description>
+    <pubDate>Mon, 17 Mar 2014 00:00:00 UT</pubDate>
+    <guid>http://javran.github.io//posts/2014-03-17-capture-the-notion-of-invertible-functions.html</guid>
+</item>
+<item>
     <title>Exploring alternatives</title>
     <link>http://javran.github.io//posts/2014-03-08-exploring-alternatives.html</link>
     <description><![CDATA[<span class="blog-date">
@@ -745,30 +932,6 @@ nmap &lt;m-c&gt; :JavaCorrect&lt;CR&gt;</code></pre>
 ]]></description>
     <pubDate>Sun, 14 Oct 2012 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2012-10-14-made-a-favicon.html</guid>
-</item>
-<item>
-    <title>Another beginning</title>
-    <link>http://javran.github.io//posts/2012-10-13-another-beginning.html</link>
-    <description><![CDATA[<span class="blog-date">
-    2012-10-13 - 
-</span>
-<span class="blog-tag">
-    
-        [ 
-        <a href="/tags/thought.html">thought</a>
-        ]
-    
-</span>
-<br />
-<br />
-<div class="blog-main">
-<p>Though I have had several blogs previously, there are outdated because of my laziness (sorry about that). And so I decide to create this blog thanks to github and <a href="http://jekyllbootstrap.com/">Jekyll-Bootstrap</a>.</p>
-<p>Actually reasons are unnecessary for my intention of creating this blog but leaving others unreclaimed, if any, just dumping stuffs that come into my mind and a desire of using English purely(for I'm not a native speaker of English).</p>
-<p>Let it be another beginning of my voyage of maintaining blogs. And I hope this time I'm capable of keeping it up-to-date.</p>
-</div>
-]]></description>
-    <pubDate>Sat, 13 Oct 2012 00:00:00 UT</pubDate>
-    <guid>http://javran.github.io//posts/2012-10-13-another-beginning.html</guid>
 </item>
 
     </channel> 
