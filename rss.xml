@@ -6,8 +6,35 @@
         <description><![CDATA[Javran's blog]]></description>
         <atom:link href="http://javran.github.io//rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Fri, 21 Mar 2014 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Sun, 06 Apr 2014 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Start working on exercism</title>
+    <link>http://javran.github.io//posts/2014-04-06-start-working-on-exercism.html</link>
+    <description><![CDATA[<span class="blog-date">
+    2014-04-06 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="/tags/haskell.html">haskell</a>, <a href="/tags/coding.html">coding</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>Since I'll be busy for the next few weeks, I can only devote few of my brain power to easy programming tasks in my spare time. Therefore, these days I've started working on <a href="http://exercism.io/">exercism</a>.</p>
+<p>It's a free website and only requires you having a github account. They offer simple programming problems with test suites. You can solve the problem and submit your source code to the website so that other users would look at your code and have comments on it.</p>
+<p>The main target is to improve the readability of your code through comments from others and iterative refinements from yourself.</p>
+<p>In a word, it's an excellent website to learn things.</p>
+<p>My account is <a href="http://exercism.io/Javran">here</a>, feel free to give me comments.</p>
+<p>See you there.</p>
+</div>
+]]></description>
+    <pubDate>Sun, 06 Apr 2014 00:00:00 UT</pubDate>
+    <guid>http://javran.github.io//posts/2014-04-06-start-working-on-exercism.html</guid>
+</item>
+<item>
     <title>Implement semantic editor combinators</title>
     <link>http://javran.github.io//posts/2014-03-21-implement-semantic-editor-combinators.html</link>
     <description><![CDATA[<span class="blog-date">
@@ -1208,47 +1235,6 @@ nmap &lt;m-c&gt; :JavaCorrect&lt;CR&gt;</code></pre>
 ]]></description>
     <pubDate>Mon, 29 Oct 2012 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2012-10-29-android-development-without-eclipse.html</guid>
-</item>
-<item>
-    <title>Game of thinking</title>
-    <link>http://javran.github.io//posts/2012-10-19-game-of-thinking.html</link>
-    <description><![CDATA[<span class="blog-date">
-    2012-10-19 - 
-</span>
-<span class="blog-tag">
-    
-        [ 
-        <a href="/tags/thought.html">thought</a>, <a href="/tags/fun.html">fun</a>, <a href="/tags/philosophy.html">philosophy</a>
-        ]
-    
-</span>
-<br />
-<br />
-<div class="blog-main">
-<p>Last night before I went to sleep, I raised an interesting question at my twitter:</p>
-<blockquote>
-<p>Given that the end of this world do exist and when this moment comes, god gives you an option that he can transfer your awareness to another parallel world which has not triggerred the condition of the end, but in return you would not have any means to intervene with that parallel world. Will you accept?</p>
-</blockquote>
-<p>I argee that by doing this transfer, you are undetectable by anything in that world, so it makes no sense from the other world's people's point of view. Some friends mention me it just like watching a movie, you can do nothing but watching, is that being an observer of another fork of world interesting? It is hard to figure out :)</p>
-<p>Another suggestion from one of my friends is that “if you can suicide mentally, there is no hurt to go to another world, you can terminate yourself when you feel boring.” It is really a good idea but I have more interest in “to suicide mentally”. We all know that physical matter can neither be created nor destroyed, is that hold true in our mental world? If that is true, then a pure soul might not be capable of performing an “awareness suicide”.</p>
-<p>Furthermore, for a long time I believe that “death” means a disconnection between the material world and the immaterial world, by transfering my soul to another world I have already disconnected with the world that I come from, am I died? do I exist?</p>
-<p>Not long after starting this discussion, I found more interesting things:</p>
-<blockquote>
-<p>It is possible that at the moment that I accept/refuse the opportunity from god, the world forks again and one of my soul transfers to another parallel world. The “another parallel world” might exactly be the world that we live in, and it is interesting because there will be various observers from the already-termintated world in our world, which cannot be proved or detected.</p>
-</blockquote>
-<p>Just allow me to take a step further:</p>
-<blockquote>
-<p>Can these observers see each other? Anyway it is impossible for them to intervene with the world they observing. What will happen if they can interact with each other?</p>
-</blockquote>
-<p>p.s.</p>
-<ul>
-<li>I believe I have to practice a lot before I can write intelligible and prolificent English. If there is anything unclear in my post, please feel free to inform me.</li>
-<li>Any ideas about the problems mentioned in this post are welcomed of course :)</li>
-</ul>
-</div>
-]]></description>
-    <pubDate>Fri, 19 Oct 2012 00:00:00 UT</pubDate>
-    <guid>http://javran.github.io//posts/2012-10-19-game-of-thinking.html</guid>
 </item>
 
     </channel> 
