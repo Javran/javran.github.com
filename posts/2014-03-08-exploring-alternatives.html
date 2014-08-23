@@ -69,7 +69,7 @@
 <span class="blog-tag">
     
         [ 
-        <a href="../tags/tyoe-tetris.html">tyoe-tetris</a>, <a href="../tags/haskell.html">haskell</a>
+        <a href="../tags/type-tetris.html">type-tetris</a>, <a href="../tags/haskell.html">haskell</a>
         ]
     
 </span>
@@ -101,28 +101,28 @@ v4 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> pure <span 
 <span class="ot">v5 ::</span> <span class="dt">Maybe</span> ()
 v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty</code></pre>
 <p>Let's bring up GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 []
-λ&gt; v2
+λ<span class="fu">&gt;</span> v2
 [<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>]
-λ&gt; v3
+λ<span class="fu">&gt;</span> v3
 <span class="dt">Just</span> <span class="dv">10</span>
-λ&gt; v4
+λ<span class="fu">&gt;</span> v4
 <span class="dt">Just</span> <span class="ch">'A'</span>
-λ&gt; v5
+λ<span class="fu">&gt;</span> v5
 <span class="dt">Nothing</span></code></pre>
 <p><code>empty</code> works like what we expected, and <code>&lt;|&gt;</code> for lists seems straightforward. But when it comes to <code>Maybe</code>, we find that only the first non-<code>Nothing</code> one takes effect, if any.</p>
 <h1 id="some-and-many"><code>some</code> and <code>many</code></h1>
-<p>The tyoe for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
+<p>The type for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]
 v6 <span class="fu">=</span> some [<span class="st">&quot;not working&quot;</span>]
 
 <span class="ot">v7 ::</span> [[<span class="dt">String</span>]]
 v7 <span class="fu">=</span> some empty</code></pre>
 <p>But when I try this out on GHCi, something is going wrong:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v6
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v6
 <span class="fu">^</span><span class="dt">CInterrupted</span><span class="fu">.</span>
-λ&gt; v7
+λ<span class="fu">&gt;</span> v7
 []</code></pre>
 <p>I gave <code>v6</code> some time to run but it didn't terminate, so I cancelled it by hand.</p>
 <p>By looking at the document, I find some clue: <code>some</code> and <code>many</code> seem to look for some solutions to the following equations:</p>
@@ -141,26 +141,26 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 <h1 id="optional"><code>optional</code></h1>
 <p>For the rest of the story, I'll just type them directly into GHCi.</p>
 <p>The last function about <code>Alternative</code> is <code>optional</code>, Let's check its type and feed it with some instances:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="fu">:</span>t optional
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t optional
 <span class="ot">optional ::</span> <span class="dt">Alternative</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ&gt; optional <span class="dt">Nothing</span>
+λ<span class="fu">&gt;</span> optional <span class="dt">Nothing</span>
 <span class="dt">Just</span> <span class="dt">Nothing</span>
-λ&gt; optional <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">1</span>
+λ<span class="fu">&gt;</span> optional <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">1</span>
 <span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ&gt; optional []
+λ<span class="fu">&gt;</span> optional []
 [<span class="dt">Nothing</span>]
-λ&gt; optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
+λ<span class="fu">&gt;</span> optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
 [<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</code></pre>
 <p>Wait a minute, is <code>f a -&gt; f (Maybe a)</code> looks familiar to you? It looks like an unary function that has type <code>a -&gt; Maybe a</code> under some contexts. I think the simplest expression that matches this type would be <code>(Just &lt;$&gt;)</code>. Let's do the same thing on it.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
 (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)<span class="ot"> ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
 <span class="dt">Nothing</span>
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span>
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span>
 <span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
 []
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
 [<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</code></pre>
 <p>Comparing the output of <code>optional</code> and <code>(Just &lt;$&gt;)</code>, we find that <code>optional</code> will attach an <code>empty</code> to the end of this monoid. And that <code>empty</code> would be the “none” part from <code>optional</code>'s description: “One or none”. In addition, we've seen <code>&lt;|&gt;</code> is the binary operation for this monoid, so we can have a guess:</p>
 <pre><code>optional v = (Just &lt;$&gt; v) &lt;|&gt; pure Nothing</code></pre>

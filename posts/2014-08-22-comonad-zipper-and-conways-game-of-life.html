@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content>
+    <meta name="author" content>
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+
+    <title>Javrania - Comonad, Zipper and Conway's Game of Life (Part 2)</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+
+    <link href="../css/lavish-bootstrap.css" rel="stylesheet">
+    <link href="../css/blog.css" rel="stylesheet">
+    <link href="../css/no-transition.css" rel="stylesheet">
+    <link href="../css/default.css" rel="stylesheet">
+    <link href="../css/hk-pyg.css" rel="stylesheet">
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    
+    <script type="text/javascript">var switchTo5x=true;</script>
+    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+    <script type="text/javascript">stLight.options(
+      { publisher: "eff44467-2bf3-4542-8683-950d62a7d47d"
+      , doNotHash: false
+      , doNotCopy: false
+      , onhover: false
+      , hashAddressBar: false});
+    </script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">Javrania</a>
+        </div>
+        <div class="collapse navbar-collapse no-transition">
+          <ul class="nav navbar-nav">
+            <!-- <li class="active"><a href="#">Home</a></li> -->
+            <li><a href="../">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../archive.html">Archive</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+      <div id="content">
+        <div class="page-header">
+          <h1>Comonad, Zipper and Conway's Game of Life (Part 2)</h1>
+        </div>
+        <span class="blog-date">
+    2014-08-22 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="../tags/haskell.html">haskell</a>, <a href="../tags/comonad.html">comonad</a>, <a href="../tags/zipper.html">zipper</a>, <a href="../tags/type-tetris.html">type-tetris</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<h1 id="intro">Intro</h1>
+<p>In the <a href="2014-04-13-comonad-and-conways-game-of-life.html">previous post</a>, We' ve discussed a little bit about comonad. But these abstract concepts are useless without practical usage.</p>
+<p>Forget about comonad and Conway's Game of Life for a while. Today I want to show you an interesting example, which will give you some ideas about what it means by saying “the value of one place depends on the value of its neighborhoods”. And these examples will be connect to the concept of comonad in a future post.</p>
+<h1 id="d-wave-propagation">2D Wave Propagation</h1>
+<p>This example simulates a simple wave propagation by ASCII art.</p>
+<p>The “world” is represented by a list of characters, each of which has a special meaning, namely:</p>
+<ul>
+<li><code>&lt;space&gt;</code> : Just the medium. Air, water, etc.</li>
+<li><code>&gt;</code> : a wave moving right.</li>
+<li><code>&lt;</code> : a wave moving left.</li>
+<li><code>X</code> : two waves with opposite direction meeting each other.</li>
+<li><code>*</code> : a wave source which will disappear at the next moment, producing waves in both directions.</li>
+</ul>
+<p>The simulation of wave propagation will be archieved by continuously printing the next generation of the “world”.</p>
+<p>For example, if we are given a string: <code>&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</code>, the output would be the following:</p>
+<pre><code>*  &gt;  *   *  &lt;  **&lt;  
+ &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;  
+  &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;&gt; 
+   X  &gt;&lt; &gt;&lt;  X&lt;&lt;   &gt;&gt;
+  &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X     &gt;
+ &lt;   X  X  X&lt;&lt; &gt;     
+&lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;
+...</code></pre>
+<h1 id="propagation-rules">Propagation Rules</h1>
+<p>I believe it's easy to see the pattern. And you can write a function to describe the rule. At the first glance you might think the state of a fixed position in the “world” only depends on its previous state and the previous states of its neighborhoods. But it turns out the previous state of itself isn't necessary, but we just leave it as an argument (Simply because I think it looks better).</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+waveRule _ l r
+    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">'X'</span>
+    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">'&gt;'</span>
+    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">'&lt;'</span>
+    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">' '</span>
+    <span class="kw">where</span>
+        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
+        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></code></pre>
+<h1 id="first-solution">First Solution</h1>
+<p>(This part is not about zippers or comonads, feel free to skip it) It is not hard to come up with a solution involving only basic list manipulations. I think it would be a good exercise. My solution can be found <a href="https://gist.github.com/Javran/eed695b4f837cc8ea214">here</a>.</p>
+<p>The output should be:</p>
+<pre><code>*  &gt;  *   *  &lt;  **&lt;
+ &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;
+  &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;
+   X  &gt;&lt; &gt;&lt;  X&lt;&lt;   
+  &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X    
+ &lt;   X  X  X&lt;&lt; &gt;   
+&lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;  
+   &lt;  &lt;&gt; &lt;X&lt; &gt;   &gt; 
+  &lt;  &lt;  X&lt;&lt;&gt;  &gt;   &gt;
+ &lt;  &lt;  &lt;&lt;X  &gt;  &gt;   
+&lt;  &lt;  &lt;&lt;&lt; &gt;  &gt;  &gt;  
+  &lt;  &lt;&lt;&lt;   &gt;  &gt;  &gt; 
+ &lt;  &lt;&lt;&lt;     &gt;  &gt;  &gt;
+&lt;  &lt;&lt;&lt;       &gt;  &gt;  
+  &lt;&lt;&lt;         &gt;  &gt; 
+ &lt;&lt;&lt;           &gt;  &gt;
+&lt;&lt;&lt;             &gt;  
+&lt;&lt;               &gt; 
+&lt;                 &gt;
+                   </code></pre>
+<h1 id="a-limited-view-of-the-world">A Limited View of the World</h1>
+<p>Now suppose this 2D world is infinite on both directions, and we introduce the obvious coordinate system into this world. We will no longer see the whole world, but only a portion of it.</p>
+<p>Now we are given two coordinates, and we can only observe the world in between these coordinates, can we still work out the problem?</p>
+<p>It turns out pretty difficult to reuse the previous approach because:</p>
+<ul>
+<li><p>Lists can only be infinite in one direction while we need a world representation that can be infinite in both directions so that we are allowed to theoretically view the world in between two arbitrary coordinates.</p></li>
+<li><p>Given a world and its previous generation, it is hard to find the “old cell state” or “old neighboring cell states” unless we can introduce something like coordinates to establish the corrspondence between cells.</p></li>
+<li><p>We don't know where to start generating the next iteration as the world can be infinite in both directions. We can't simply walk through it from left to right, which might not terminate.</p></li>
+</ul>
+<p>I'd recommend to use a list <a href="http://en.wikipedia.org/wiki/Zipper_%28data_structure%29">zipper</a> to overcome these problems.</p>
+<h1 id="list-zippers">List Zippers</h1>
+<p>Zippers are a way to efficiently walk back and forth or update values in certain data structures like lists and trees. Those data structures can usually be traversed in a deterministic way.</p>
+<p>A zipper of a certain data structure usually consists of two parts: a stack of data contexts (each data context is an incompete data structure with a “hole” in it), and a value that can fill a “hole”.</p>
+<p>Here we are only interested in list zippers. But there are plenty of useful tutorials about zippers like <a href="http://learnyouahaskell.com/zippers">this one</a> from <a href="http://learnyouahaskell.com/chapters">LYAH</a>.</p>
+<p>To explain what we just said about zippers, we take a random list <code>[1,2,3]</code> (you should recall that <code>[1,2,3]</code> is just a shorthand for <code>1:2:3:[]</code>) and traverse it to demonstrate list zippers.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Stack</th>
+<th align="left">Focus</th>
+<th align="left">Zipper = (Stack,Focus)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>[]</code></td>
+<td align="left"><code>[1,2,3]</code></td>
+<td align="left"><code>([],[1,2,3])</code></td>
+</tr>
+<tr class="even">
+<td align="left"><code>[1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[2,3]</code></td>
+<td align="left"><code>([1],[2,3])</code></td>
+</tr>
+<tr class="odd">
+<td align="left"><code>[2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[3]</code></td>
+<td align="left"><code>([2,1],[3])</code></td>
+</tr>
+<tr class="even">
+<td align="left"><code>[3:&lt;hole&gt;, 2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[]</code></td>
+<td align="left"><code>([3,2,1],[])</code></td>
+</tr>
+</tbody>
+</table>
+<p>A list zipper changes as we are walking in the data structure, the table above shows how the list zipper changes as we walk though a list from left to right. Note that since the data context for a list is always something like <code>(&lt;value&gt;:&lt;hole&gt;)</code>, we can simply represent it as <code>&lt;value&gt;</code>. That is why a list zipper are usually represented as a pair of two lists, or to be more precise, a stack and a list.</p>
+<p>The data context stack makes it possible to traverse backwards. Whenever we want to do so, pop one data context from the stack, and fill in its hole by using the current focus. For example, to go backwards when the list zipper is <code>([2,1],[3])</code>, we pop the data context to get <code>2:&lt;hole&gt;</code>, fill in the hole with our current focus, namely <code>[3]</code> and we end up with <code>([1],2:[3])</code> whose focus is changed from <code>[3]</code> to <code>[2,3]</code>.</p>
+<p>We can also change the value at the focus efficiently. For example, when the list zipper is <code>([2,1],[3])</code>, we modify the focus to <code>[4,5,6]</code>. And then we keep going backwards to recover the list. We will end up with <code>1:2:[4,5,6]</code> and as you can see the part we were focusing on (namely <code>[3]</code>) is now replaced by <code>[4,5,6]</code>.</p>
+<h1 id="list-zippers-to-the-rescue">List Zippers to the Rescue</h1>
+<p>With some introduction of zippers, I can now explain how can list zippers solve our problem.</p>
+<ul>
+<li><p>List zippers can be infinite in both directions by using a simple trick: make the context stack infinite. It is an importation observation that the stack in the list zipper are actually the reversed left part of the list and the focus the right part. By making both the reversed left part and right part infinite, we end up with a list zipper that is infinite in both directions.</p></li>
+<li><p>It's quite easy to find “old cell state” and “old neighboring cell states” given the list zipper. The old cell is the <code>head</code> of the current focus, the cells right next to it are the top of the stack and the second element of the current focus, respectively. Therefore for any given list zipper, we can yield the next cell state of the <code>head</code> of the current focusing list.</p></li>
+<li><p>We don't need to worry about where to start generating the next world, given a list zipper, we know how to iteratively move the focus to the left or to the right. So as long as we can pin one position to the origin point of the world, we can take steps based on the original zipper by moving either left or right to focus on the coordinate in question. And a list zipper contains sufficient information to calculate the next cell state in question.</p></li>
+</ul>
+<h1 id="implementation">Implementation</h1>
+<h2 id="zippers">Zippers</h2>
+<p>First let's begin with zipper implementations. Since the world can never be empty, it is totally safe to break the focusing data (<code>[a]</code>) into its components (<code>(a,[a])</code>). By rearranging the order of arguments (<code>([a],[a])</code> … <code>([a],(a,[a]))</code> … <code>LZipper a [a] [a]</code>) we have our final version of <code>LZipper</code> here:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span>
+
+<span class="co">-- | LZipper &lt;current&gt; &lt;left (reversed)&gt; &lt;right&gt;</span>
+<span class="kw">data</span> <span class="dt">LZipper</span> a <span class="fu">=</span> <span class="dt">LZipper</span> a [a] [a]
+    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</code></pre>
+<p>Here the old focus would be <code>&lt;current&gt;:&lt;right&gt;</code> but we can break the focusing list to make it looks nicer: now a list zipper in our case consists of three parts, a current focus <code>&lt;current&gt;</code>, everything to the left of it <code>&lt;left (reversed)&gt;</code> and everything to the right of it <code>&lt;right&gt;</code>.</p>
+<p>With the list zipper definition given, it's easy to define basic operations:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | shift left and right</span>
+zipperMoveL,<span class="ot"> zipperMoveR ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+zipperMoveL (<span class="dt">LZipper</span> a (x<span class="fu">:</span>xs') ys) <span class="fu">=</span> <span class="dt">LZipper</span> x xs' (a<span class="fu">:</span>ys)
+zipperMoveL _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
+zipperMoveR (<span class="dt">LZipper</span> a xs (y<span class="fu">:</span>ys')) <span class="fu">=</span> <span class="dt">LZipper</span> y (a<span class="fu">:</span>xs) ys'
+zipperMoveR _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
+
+<span class="co">-- | get the current focusing element</span>
+<span class="ot">current ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> a
+current (<span class="dt">LZipper</span> v _ _) <span class="fu">=</span> v</code></pre>
+<h2 id="conversion-between-limited-worlds-and-infinite-worlds">Conversion between Limited Worlds and Infinite Worlds</h2>
+<p>To initialize the world we need to convert from a list of cells to a zipper which represents the infinite world. This can be achieved by padding the list to make it infinite in both directions:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | initial world to a zipper</span>
+<span class="ot">rangeToZipper ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+rangeToZipper v wd <span class="fu">=</span> <span class="kw">case</span> wd <span class="kw">of</span>
+    []   <span class="ot">-&gt;</span> <span class="dt">LZipper</span> v pad pad
+    x<span class="fu">:</span>xs <span class="ot">-&gt;</span> <span class="dt">LZipper</span> x pad (xs <span class="fu">++</span> pad)
+    <span class="kw">where</span>
+        pad <span class="fu">=</span> repeat v</code></pre>
+<p>And to view a portion of the infinite world, we take as argument two coordinates and a zipper (the zipper is assumed to point to the origin point), move the zipper to the position specified by one of the coordinate, and then extract the value of the focus from zipper and keep moving the zipper to the other coordinate.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span>
+<span class="ot">zipperToRange ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> [a]
+zipperToRange (i,j) zp <span class="fu">=</span> fmap current zippers
+    <span class="kw">where</span>
+        zippers <span class="fu">=</span> take (j <span class="fu">-</span> i <span class="fu">+</span> <span class="dv">1</span>) (iterate zipperMoveR startZ)
+        startZ <span class="fu">=</span> zipperMoveFocus i zp
+<span class="ot">        zipperMoveFocus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+        zipperMoveFocus t z
+            <span class="fu">|</span> t <span class="fu">&gt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">-</span><span class="dv">1</span>) (zipperMoveR z)
+            <span class="fu">|</span> t <span class="fu">&lt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">+</span><span class="dv">1</span>) (zipperMoveL z)
+            <span class="fu">|</span> otherwise <span class="fu">=</span> z</code></pre>
+<h2 id="propagation-rules-1">Propagation Rules</h2>
+<p>We modify <code>waveRule</code> function above so that it can produce the next cell state from a zipper. The nice thing about our zipper is that both of the neighboring old cell states can be easily found by pattern matching on arguments.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+waveRule (<span class="dt">LZipper</span> _ (l<span class="fu">:</span>_) (r<span class="fu">:</span>_))
+    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">'X'</span>
+    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">'&gt;'</span>
+    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">'&lt;'</span>
+    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">' '</span>
+    <span class="kw">where</span>
+        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
+        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span>
+waveRule _ <span class="fu">=</span> error <span class="st">&quot;null zipper&quot;</span></code></pre>
+<p>And then we rush to complete the main function, assuming <code>nextGen :: LZipper Char -&gt; LZipper Char</code>, a function that takes a zipper and produces a zipper of the next generation. has been implemented for us.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen <span class="fu">=</span> undefined
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> mapM_ (putStrLn <span class="fu">.</span> zipperToRange (<span class="fu">-</span><span class="dv">20</span>,<span class="dv">40</span>)) (take <span class="dv">20</span> (iterate nextGen startZ))
+    <span class="kw">where</span>
+        startStr <span class="fu">=</span> <span class="st">&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</span>
+        startZ <span class="fu">=</span> rangeToZipper <span class="ch">' '</span> startStr</code></pre>
+<p>In the code above, we take 20 generations, view the world within range <code>(-20,40)</code>.</p>
+<h2 id="the-final-missing-piece">The Final Missing Piece</h2>
+<p>The only thing missing in our implementation is the <code>nextGen</code> function, this is also where the magic happens. Let's implement it step by step.</p>
+<p>By taking its type signature into account, we can write down the shape of the body:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> undefined
+        ls' <span class="fu">=</span> undefined
+        rs' <span class="fu">=</span> undefined</code></pre>
+<p>And it's not hard to figure out what is <code>c'</code> – the new cell state in correspondence with <code>c</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> waveRule z
+        ls' <span class="fu">=</span> undefined
+        rs' <span class="fu">=</span> undefined</code></pre>
+<p>To figure out <code>ls'</code>, we first try to figure out the first element of it, namely <code>l'</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> waveRule z
+        l' <span class="fu">=</span> undefined
+        ls' <span class="fu">=</span> l' <span class="fu">:</span> undefined
+        rs' <span class="fu">=</span> undefined</code></pre>
+<p>Since the focus of <code>l'</code> is the direct neighborhood of <code>c</code>, we can simply move the zipper to calculate its new state:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> waveRule z
+        l' <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
+        ls' <span class="fu">=</span> l' <span class="fu">:</span> undefined
+        rs' <span class="fu">=</span> undefined</code></pre>
+<p>Comparing <code>c'</code> and <code>l'</code>, we can find the pattern:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> waveRule z
+        l' <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
+        ls' <span class="fu">=</span> [waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, waveRule <span class="fu">.</span> zipperMoveL <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, <span class="fu">...</span>]
+        rs' <span class="fu">=</span> undefined</code></pre>
+<p>And the same pattern holds for <code>rs'</code>: we just keep moving the zipper to its left or right, and produce new states by applying <code>waveRule</code> to it. So we end up with:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
+    <span class="kw">where</span>
+        c' <span class="fu">=</span> waveRule z
+        ls' <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveL z
+        rs' <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveR z</code></pre>
+<p>Now the whole program should be complete, if you run it, you will get something like this:</p>
+<pre><code>                    *  &gt;  *   *  &lt;  **&lt;                      
+                   &lt; &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;                      
+                  &lt;   &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;&gt;                     
+                 &lt;     X  &gt;&lt; &gt;&lt;  X&lt;&lt;   &gt;&gt;                    
+                &lt;     &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X     &gt;&gt;                   
+               &lt;     &lt;   X  X  X&lt;&lt; &gt;     &gt;&gt;                  
+              &lt;     &lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;     &gt;&gt;                 
+             &lt;     &lt;   &lt;  &lt;&gt; &lt;X&lt; &gt;   &gt;     &gt;&gt;                
+            &lt;     &lt;   &lt;  &lt;  X&lt;&lt;&gt;  &gt;   &gt;     &gt;&gt;               
+           &lt;     &lt;   &lt;  &lt;  &lt;&lt;X  &gt;  &gt;   &gt;     &gt;&gt;              
+          &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt; &gt;  &gt;  &gt;   &gt;     &gt;&gt;             
+         &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;   &gt;  &gt;  &gt;   &gt;     &gt;&gt;            
+        &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;     &gt;  &gt;  &gt;   &gt;     &gt;&gt;           
+       &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;       &gt;  &gt;  &gt;   &gt;     &gt;&gt;          
+      &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;         &gt;  &gt;  &gt;   &gt;     &gt;&gt;         
+     &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;           &gt;  &gt;  &gt;   &gt;     &gt;&gt;        
+    &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;             &gt;  &gt;  &gt;   &gt;     &gt;&gt;       
+   &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;               &gt;  &gt;  &gt;   &gt;     &gt;&gt;      
+  &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;                 &gt;  &gt;  &gt;   &gt;     &gt;&gt;     
+ &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;                   &gt;  &gt;  &gt;   &gt;     &gt;&gt;    </code></pre>
+<p>Let's call it a day here. In the next part we'll go back to comonads, and its relationship between zippers. And hopefully we will finally see the implementation of Conway's Game of Life.</p>
+<h1 id="complete-code">Complete Code</h1>
+<p>You can find my complete code from <a href="https://gist.github.com/Javran/926296611a521cb00467">gist</a>.</p>
+<h1 id="other-parts">Other parts</h1>
+<ul>
+<li><a href="2014-04-13-comonad-and-conways-game-of-life.html">Part 1</a></li>
+</ul>
+</div>
+
+<br /><br />
+<div class="pull-right">
+<span class="st_blogger_large" displayText="Blogger"></span>
+<span class="st_delicious_large" displayText="Delicious"></span>
+<span class="st_facebook_large" displayText="Facebook"></span>
+<span class="st_reddit_large" displayText="Reddit"></span>
+<span class="st_sina_large" displayText="Sina"></span>
+<span class="st_twitter_large" displayText="Tweet"></span>
+<span class="st_wordpress_large" displayText="WordPress"></span>
+</div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'javrania'; // required: replace example with your forum shortname
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+ var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+ })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+      </div>
+      
+
+    </div><!-- /.container -->
+
+
+    <div class="blog-footer">
+        Site proudly generated by
+        <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        <br />
+        Powered by
+        <a href="http://getbootstrap.com/">Bootstrap</a>
+        <br />
+        Colorized by
+        <a href="http://www.lavishbootstrap.com/">Lavish</a>
+        <br />
+                <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type">Javrania</span>
+        by <a xmlns:cc="http://creativecommons.org/ns#" href="https://github.com/Javran" property="cc:attributionName" rel="cc:attributionURL">Javran Cheng</a>
+        is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">Creative Commons Attribution 4.0 International License</a>.
+        <br /><br />
+        <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">
+            <img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />
+
+    </div>
+    <!-- Bootstrap core JavaScript
+         ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+  </body>
+</html>

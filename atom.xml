@@ -8,9 +8,282 @@
         <name>Javran Cheng</name>
         <email>Javran.c+fromBlogFeed@gmail.com</email>
     </author>
-    <updated>2014-04-13T00:00:00Z</updated>
+    <updated>2014-08-22T00:00:00Z</updated>
     <entry>
-    <title>Comonad and Conway's Game of Life (Part 1)</title>
+    <title>Comonad, Zipper and Conway's Game of Life (Part 2)</title>
+    <link href="http://javran.github.io//posts/2014-08-22-comonad-zipper-and-conways-game-of-life.html" />
+    <id>http://javran.github.io//posts/2014-08-22-comonad-zipper-and-conways-game-of-life.html</id>
+    <published>2014-08-22T00:00:00Z</published>
+    <updated>2014-08-22T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<span class="blog-date">
+    2014-08-22 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="/tags/haskell.html">haskell</a>, <a href="/tags/comonad.html">comonad</a>, <a href="/tags/zipper.html">zipper</a>, <a href="/tags/type-tetris.html">type-tetris</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<h1 id="intro">Intro</h1>
+<p>In the <a href="2014-04-13-comonad-and-conways-game-of-life.html">previous post</a>, We' ve discussed a little bit about comonad. But these abstract concepts are useless without practical usage.</p>
+<p>Forget about comonad and Conway's Game of Life for a while. Today I want to show you an interesting example, which will give you some ideas about what it means by saying “the value of one place depends on the value of its neighborhoods”. And these examples will be connect to the concept of comonad in a future post.</p>
+<h1 id="d-wave-propagation">2D Wave Propagation</h1>
+<p>This example simulates a simple wave propagation by ASCII art.</p>
+<p>The “world” is represented by a list of characters, each of which has a special meaning, namely:</p>
+<ul>
+<li><code>&lt;space&gt;</code> : Just the medium. Air, water, etc.</li>
+<li><code>&gt;</code> : a wave moving right.</li>
+<li><code>&lt;</code> : a wave moving left.</li>
+<li><code>X</code> : two waves with opposite direction meeting each other.</li>
+<li><code>*</code> : a wave source which will disappear at the next moment, producing waves in both directions.</li>
+</ul>
+<p>The simulation of wave propagation will be archieved by continuously printing the next generation of the “world”.</p>
+<p>For example, if we are given a string: <code>&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</code>, the output would be the following:</p>
+<pre><code>*  &gt;  *   *  &lt;  **&lt;  
+ &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;  
+  &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;&gt; 
+   X  &gt;&lt; &gt;&lt;  X&lt;&lt;   &gt;&gt;
+  &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X     &gt;
+ &lt;   X  X  X&lt;&lt; &gt;     
+&lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;
+...</code></pre>
+<h1 id="propagation-rules">Propagation Rules</h1>
+<p>I believe it's easy to see the pattern. And you can write a function to describe the rule. At the first glance you might think the state of a fixed position in the “world” only depends on its previous state and the previous states of its neighborhoods. But it turns out the previous state of itself isn't necessary, but we just leave it as an argument (Simply because I think it looks better).</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+waveRule _ l r
+    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">&#39;X&#39;</span>
+    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">&#39;&gt;&#39;</span>
+    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">&#39;&lt;&#39;</span>
+    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">&#39; &#39;</span>
+    <span class="kw">where</span>
+        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
+        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></code></pre>
+<h1 id="first-solution">First Solution</h1>
+<p>(This part is not about zippers or comonads, feel free to skip it) It is not hard to come up with a solution involving only basic list manipulations. I think it would be a good exercise. My solution can be found <a href="https://gist.github.com/Javran/eed695b4f837cc8ea214">here</a>.</p>
+<p>The output should be:</p>
+<pre><code>*  &gt;  *   *  &lt;  **&lt;
+ &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;
+  &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;
+   X  &gt;&lt; &gt;&lt;  X&lt;&lt;   
+  &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X    
+ &lt;   X  X  X&lt;&lt; &gt;   
+&lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;  
+   &lt;  &lt;&gt; &lt;X&lt; &gt;   &gt; 
+  &lt;  &lt;  X&lt;&lt;&gt;  &gt;   &gt;
+ &lt;  &lt;  &lt;&lt;X  &gt;  &gt;   
+&lt;  &lt;  &lt;&lt;&lt; &gt;  &gt;  &gt;  
+  &lt;  &lt;&lt;&lt;   &gt;  &gt;  &gt; 
+ &lt;  &lt;&lt;&lt;     &gt;  &gt;  &gt;
+&lt;  &lt;&lt;&lt;       &gt;  &gt;  
+  &lt;&lt;&lt;         &gt;  &gt; 
+ &lt;&lt;&lt;           &gt;  &gt;
+&lt;&lt;&lt;             &gt;  
+&lt;&lt;               &gt; 
+&lt;                 &gt;
+                   </code></pre>
+<h1 id="a-limited-view-of-the-world">A Limited View of the World</h1>
+<p>Now suppose this 2D world is infinite on both directions, and we introduce the obvious coordinate system into this world. We will no longer see the whole world, but only a portion of it.</p>
+<p>Now we are given two coordinates, and we can only observe the world in between these coordinates, can we still work out the problem?</p>
+<p>It turns out pretty difficult to reuse the previous approach because:</p>
+<ul>
+<li><p>Lists can only be infinite in one direction while we need a world representation that can be infinite in both directions so that we are allowed to theoretically view the world in between two arbitrary coordinates.</p></li>
+<li><p>Given a world and its previous generation, it is hard to find the “old cell state” or “old neighboring cell states” unless we can introduce something like coordinates to establish the corrspondence between cells.</p></li>
+<li><p>We don't know where to start generating the next iteration as the world can be infinite in both directions. We can't simply walk through it from left to right, which might not terminate.</p></li>
+</ul>
+<p>I'd recommend to use a list <a href="http://en.wikipedia.org/wiki/Zipper_%28data_structure%29">zipper</a> to overcome these problems.</p>
+<h1 id="list-zippers">List Zippers</h1>
+<p>Zippers are a way to efficiently walk back and forth or update values in certain data structures like lists and trees. Those data structures can usually be traversed in a deterministic way.</p>
+<p>A zipper of a certain data structure usually consists of two parts: a stack of data contexts (each data context is an incompete data structure with a “hole” in it), and a value that can fill a “hole”.</p>
+<p>Here we are only interested in list zippers. But there are plenty of useful tutorials about zippers like <a href="http://learnyouahaskell.com/zippers">this one</a> from <a href="http://learnyouahaskell.com/chapters">LYAH</a>.</p>
+<p>To explain what we just said about zippers, we take a random list <code>[1,2,3]</code> (you should recall that <code>[1,2,3]</code> is just a shorthand for <code>1:2:3:[]</code>) and traverse it to demonstrate list zippers.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Stack</th>
+<th align="left">Focus</th>
+<th align="left">Zipper = (Stack,Focus)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>[]</code></td>
+<td align="left"><code>[1,2,3]</code></td>
+<td align="left"><code>([],[1,2,3])</code></td>
+</tr>
+<tr class="even">
+<td align="left"><code>[1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[2,3]</code></td>
+<td align="left"><code>([1],[2,3])</code></td>
+</tr>
+<tr class="odd">
+<td align="left"><code>[2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[3]</code></td>
+<td align="left"><code>([2,1],[3])</code></td>
+</tr>
+<tr class="even">
+<td align="left"><code>[3:&lt;hole&gt;, 2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td align="left"><code>[]</code></td>
+<td align="left"><code>([3,2,1],[])</code></td>
+</tr>
+</tbody>
+</table>
+<p>A list zipper changes as we are walking in the data structure, the table above shows how the list zipper changes as we walk though a list from left to right. Note that since the data context for a list is always something like <code>(&lt;value&gt;:&lt;hole&gt;)</code>, we can simply represent it as <code>&lt;value&gt;</code>. That is why a list zipper are usually represented as a pair of two lists, or to be more precise, a stack and a list.</p>
+<p>The data context stack makes it possible to traverse backwards. Whenever we want to do so, pop one data context from the stack, and fill in its hole by using the current focus. For example, to go backwards when the list zipper is <code>([2,1],[3])</code>, we pop the data context to get <code>2:&lt;hole&gt;</code>, fill in the hole with our current focus, namely <code>[3]</code> and we end up with <code>([1],2:[3])</code> whose focus is changed from <code>[3]</code> to <code>[2,3]</code>.</p>
+<p>We can also change the value at the focus efficiently. For example, when the list zipper is <code>([2,1],[3])</code>, we modify the focus to <code>[4,5,6]</code>. And then we keep going backwards to recover the list. We will end up with <code>1:2:[4,5,6]</code> and as you can see the part we were focusing on (namely <code>[3]</code>) is now replaced by <code>[4,5,6]</code>.</p>
+<h1 id="list-zippers-to-the-rescue">List Zippers to the Rescue</h1>
+<p>With some introduction of zippers, I can now explain how can list zippers solve our problem.</p>
+<ul>
+<li><p>List zippers can be infinite in both directions by using a simple trick: make the context stack infinite. It is an importation observation that the stack in the list zipper are actually the reversed left part of the list and the focus the right part. By making both the reversed left part and right part infinite, we end up with a list zipper that is infinite in both directions.</p></li>
+<li><p>It's quite easy to find “old cell state” and “old neighboring cell states” given the list zipper. The old cell is the <code>head</code> of the current focus, the cells right next to it are the top of the stack and the second element of the current focus, respectively. Therefore for any given list zipper, we can yield the next cell state of the <code>head</code> of the current focusing list.</p></li>
+<li><p>We don't need to worry about where to start generating the next world, given a list zipper, we know how to iteratively move the focus to the left or to the right. So as long as we can pin one position to the origin point of the world, we can take steps based on the original zipper by moving either left or right to focus on the coordinate in question. And a list zipper contains sufficient information to calculate the next cell state in question.</p></li>
+</ul>
+<h1 id="implementation">Implementation</h1>
+<h2 id="zippers">Zippers</h2>
+<p>First let's begin with zipper implementations. Since the world can never be empty, it is totally safe to break the focusing data (<code>[a]</code>) into its components (<code>(a,[a])</code>). By rearranging the order of arguments (<code>([a],[a])</code> … <code>([a],(a,[a]))</code> … <code>LZipper a [a] [a]</code>) we have our final version of <code>LZipper</code> here:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span>
+
+<span class="co">-- | LZipper &lt;current&gt; &lt;left (reversed)&gt; &lt;right&gt;</span>
+<span class="kw">data</span> <span class="dt">LZipper</span> a <span class="fu">=</span> <span class="dt">LZipper</span> a [a] [a]
+    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</code></pre>
+<p>Here the old focus would be <code>&lt;current&gt;:&lt;right&gt;</code> but we can break the focusing list to make it looks nicer: now a list zipper in our case consists of three parts, a current focus <code>&lt;current&gt;</code>, everything to the left of it <code>&lt;left (reversed)&gt;</code> and everything to the right of it <code>&lt;right&gt;</code>.</p>
+<p>With the list zipper definition given, it's easy to define basic operations:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | shift left and right</span>
+zipperMoveL,<span class="ot"> zipperMoveR ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+zipperMoveL (<span class="dt">LZipper</span> a (x<span class="fu">:</span>xs&#39;) ys) <span class="fu">=</span> <span class="dt">LZipper</span> x xs&#39; (a<span class="fu">:</span>ys)
+zipperMoveL _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
+zipperMoveR (<span class="dt">LZipper</span> a xs (y<span class="fu">:</span>ys&#39;)) <span class="fu">=</span> <span class="dt">LZipper</span> y (a<span class="fu">:</span>xs) ys&#39;
+zipperMoveR _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
+
+<span class="co">-- | get the current focusing element</span>
+<span class="ot">current ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> a
+current (<span class="dt">LZipper</span> v _ _) <span class="fu">=</span> v</code></pre>
+<h2 id="conversion-between-limited-worlds-and-infinite-worlds">Conversion between Limited Worlds and Infinite Worlds</h2>
+<p>To initialize the world we need to convert from a list of cells to a zipper which represents the infinite world. This can be achieved by padding the list to make it infinite in both directions:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | initial world to a zipper</span>
+<span class="ot">rangeToZipper ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+rangeToZipper v wd <span class="fu">=</span> <span class="kw">case</span> wd <span class="kw">of</span>
+    []   <span class="ot">-&gt;</span> <span class="dt">LZipper</span> v pad pad
+    x<span class="fu">:</span>xs <span class="ot">-&gt;</span> <span class="dt">LZipper</span> x pad (xs <span class="fu">++</span> pad)
+    <span class="kw">where</span>
+        pad <span class="fu">=</span> repeat v</code></pre>
+<p>And to view a portion of the infinite world, we take as argument two coordinates and a zipper (the zipper is assumed to point to the origin point), move the zipper to the position specified by one of the coordinate, and then extract the value of the focus from zipper and keep moving the zipper to the other coordinate.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span>
+<span class="ot">zipperToRange ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> [a]
+zipperToRange (i,j) zp <span class="fu">=</span> fmap current zippers
+    <span class="kw">where</span>
+        zippers <span class="fu">=</span> take (j <span class="fu">-</span> i <span class="fu">+</span> <span class="dv">1</span>) (iterate zipperMoveR startZ)
+        startZ <span class="fu">=</span> zipperMoveFocus i zp
+<span class="ot">        zipperMoveFocus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
+        zipperMoveFocus t z
+            <span class="fu">|</span> t <span class="fu">&gt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">-</span><span class="dv">1</span>) (zipperMoveR z)
+            <span class="fu">|</span> t <span class="fu">&lt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">+</span><span class="dv">1</span>) (zipperMoveL z)
+            <span class="fu">|</span> otherwise <span class="fu">=</span> z</code></pre>
+<h2 id="propagation-rules-1">Propagation Rules</h2>
+<p>We modify <code>waveRule</code> function above so that it can produce the next cell state from a zipper. The nice thing about our zipper is that both of the neighboring old cell states can be easily found by pattern matching on arguments.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+waveRule (<span class="dt">LZipper</span> _ (l<span class="fu">:</span>_) (r<span class="fu">:</span>_))
+    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">&#39;X&#39;</span>
+    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">&#39;&gt;&#39;</span>
+    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">&#39;&lt;&#39;</span>
+    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">&#39; &#39;</span>
+    <span class="kw">where</span>
+        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
+        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span>
+waveRule _ <span class="fu">=</span> error <span class="st">&quot;null zipper&quot;</span></code></pre>
+<p>And then we rush to complete the main function, assuming <code>nextGen :: LZipper Char -&gt; LZipper Char</code>, a function that takes a zipper and produces a zipper of the next generation. has been implemented for us.</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen <span class="fu">=</span> undefined
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> mapM_ (putStrLn <span class="fu">.</span> zipperToRange (<span class="fu">-</span><span class="dv">20</span>,<span class="dv">40</span>)) (take <span class="dv">20</span> (iterate nextGen startZ))
+    <span class="kw">where</span>
+        startStr <span class="fu">=</span> <span class="st">&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</span>
+        startZ <span class="fu">=</span> rangeToZipper <span class="ch">&#39; &#39;</span> startStr</code></pre>
+<p>In the code above, we take 20 generations, view the world within range <code>(-20,40)</code>.</p>
+<h2 id="the-final-missing-piece">The Final Missing Piece</h2>
+<p>The only thing missing in our implementation is the <code>nextGen</code> function, this is also where the magic happens. Let's implement it step by step.</p>
+<p>By taking its type signature into account, we can write down the shape of the body:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> undefined
+        ls&#39; <span class="fu">=</span> undefined
+        rs&#39; <span class="fu">=</span> undefined</code></pre>
+<p>And it's not hard to figure out what is <code>c'</code> – the new cell state in correspondence with <code>c</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> waveRule z
+        ls&#39; <span class="fu">=</span> undefined
+        rs&#39; <span class="fu">=</span> undefined</code></pre>
+<p>To figure out <code>ls'</code>, we first try to figure out the first element of it, namely <code>l'</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> waveRule z
+        l&#39; <span class="fu">=</span> undefined
+        ls&#39; <span class="fu">=</span> l&#39; <span class="fu">:</span> undefined
+        rs&#39; <span class="fu">=</span> undefined</code></pre>
+<p>Since the focus of <code>l'</code> is the direct neighborhood of <code>c</code>, we can simply move the zipper to calculate its new state:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> waveRule z
+        l&#39; <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
+        ls&#39; <span class="fu">=</span> l&#39; <span class="fu">:</span> undefined
+        rs&#39; <span class="fu">=</span> undefined</code></pre>
+<p>Comparing <code>c'</code> and <code>l'</code>, we can find the pattern:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> waveRule z
+        l&#39; <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
+        ls&#39; <span class="fu">=</span> [waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, waveRule <span class="fu">.</span> zipperMoveL <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, <span class="fu">...</span>]
+        rs&#39; <span class="fu">=</span> undefined</code></pre>
+<p>And the same pattern holds for <code>rs'</code>: we just keep moving the zipper to its left or right, and produce new states by applying <code>waveRule</code> to it. So we end up with:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
+    <span class="kw">where</span>
+        c&#39; <span class="fu">=</span> waveRule z
+        ls&#39; <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveL z
+        rs&#39; <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveR z</code></pre>
+<p>Now the whole program should be complete, if you run it, you will get something like this:</p>
+<pre><code>                    *  &gt;  *   *  &lt;  **&lt;                      
+                   &lt; &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;                      
+                  &lt;   &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;&gt;                     
+                 &lt;     X  &gt;&lt; &gt;&lt;  X&lt;&lt;   &gt;&gt;                    
+                &lt;     &lt; &gt; &lt;&gt; &lt;&gt; &lt;&lt;X     &gt;&gt;                   
+               &lt;     &lt;   X  X  X&lt;&lt; &gt;     &gt;&gt;                  
+              &lt;     &lt;   &lt; &gt;&lt; &gt;&lt;&lt;X   &gt;     &gt;&gt;                 
+             &lt;     &lt;   &lt;  &lt;&gt; &lt;X&lt; &gt;   &gt;     &gt;&gt;                
+            &lt;     &lt;   &lt;  &lt;  X&lt;&lt;&gt;  &gt;   &gt;     &gt;&gt;               
+           &lt;     &lt;   &lt;  &lt;  &lt;&lt;X  &gt;  &gt;   &gt;     &gt;&gt;              
+          &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt; &gt;  &gt;  &gt;   &gt;     &gt;&gt;             
+         &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;   &gt;  &gt;  &gt;   &gt;     &gt;&gt;            
+        &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;     &gt;  &gt;  &gt;   &gt;     &gt;&gt;           
+       &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;       &gt;  &gt;  &gt;   &gt;     &gt;&gt;          
+      &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;         &gt;  &gt;  &gt;   &gt;     &gt;&gt;         
+     &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;           &gt;  &gt;  &gt;   &gt;     &gt;&gt;        
+    &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;             &gt;  &gt;  &gt;   &gt;     &gt;&gt;       
+   &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;               &gt;  &gt;  &gt;   &gt;     &gt;&gt;      
+  &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;                 &gt;  &gt;  &gt;   &gt;     &gt;&gt;     
+ &lt;     &lt;   &lt;  &lt;  &lt;&lt;&lt;                   &gt;  &gt;  &gt;   &gt;     &gt;&gt;    </code></pre>
+<p>Let's call it a day here. In the next part we'll go back to comonads, and its relationship between zippers. And hopefully we will finally see the implementation of Conway's Game of Life.</p>
+<h1 id="complete-code">Complete Code</h1>
+<p>You can find my complete code from <a href="https://gist.github.com/Javran/926296611a521cb00467">gist</a>.</p>
+<h1 id="other-parts">Other parts</h1>
+<ul>
+<li><a href="2014-04-13-comonad-and-conways-game-of-life.html">Part 1</a></li>
+</ul>
+</div>
+]]></summary>
+</entry>
+<entry>
+    <title>Comonad, Zipper and Conway's Game of Life (Part 1)</title>
     <link href="http://javran.github.io//posts/2014-04-13-comonad-and-conways-game-of-life.html" />
     <id>http://javran.github.io//posts/2014-04-13-comonad-and-conways-game-of-life.html</id>
     <published>2014-04-13T00:00:00Z</published>
@@ -28,9 +301,10 @@
 <br />
 <br />
 <div class="blog-main">
+<p>(Updated on Aug 22, 2014, better title, add link)</p>
 <h1 id="intro">Intro</h1>
 <p>Let's go beyond monad, today I want to show you how to play with <a href="http://hackage.haskell.org/package/comonad">comonad</a>. I don't understand the theory behind comonad, but programming with it is quite simple. Basically, I think <strong>it's just an algebraic structure dealing with data context.</strong></p>
-<p>In other words, if you find yourself dealing with some recursive data structure, and in that data structure, the value of one place depends on the value of neighborhoods (some “data context”, not sure if I'm using the right terminology), you probably want to take a look at comonad.</p>
+<p>In other words, if you find yourself dealing with some recursive data structure, and in that data structure, the value of one place depends on the value of its neighborhoods (some “data context”, not sure if I'm using the right terminology), you probably want to take a look at comonad.</p>
 <h1 id="conways-game-of-life">Conway's Game of Life</h1>
 <p>To do something interesting with comonad, the first thing came to my mind was <a href="http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Game of Life</a>. It's a simple “game” that involves no players. At the beginning, a world is represented as a 2D array of booleans. Then this world evolves following some simple <a href="http://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules">rules</a>.</p>
 <p>Looking at these rules, you will find that the next state of a given cell in the world is merely determined by the previous states of itself and its neighborhoods. So I feel Game of Life would be a perfect example for comonad.</p>
@@ -79,6 +353,10 @@ w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu
 <p>Now suppose there is a building without maps, what <code>duplicate</code> does is just like drawing maps for each place inside the building and putting them to their right places. So <code>w</code> is the building “comonad”, <code>a</code> is a single place inside the building and <code>duplicate :: w a -&gt; w (w a)</code> draws maps and put them to their corresponding places.</p>
 <p>And just like <code>(&gt;&gt;=)</code> in monad, <code>(=&gt;&gt;)</code> is more handy to use in comonad. Looking at its signature <code>(=&gt;&gt;) :: (w a -&gt; b) -&gt; w a -&gt; w b</code>, the most interesting part is its first argument, a function of type <code>w a -&gt; b</code>. This argument is exactly where rules come into play: “Given a data with focus (<code>w a</code>), let's determine the next value of the current focus will be (<code>b</code>).”</p>
 <p>I'd like to call it a day here. In the future posts, we'll see these functions in action.</p>
+<h1 id="other-parts">Other parts</h1>
+<ul>
+<li><a href="2014-08-22-comonad-zipper-and-conways-game-of-life.html">Part 2</a></li>
+</ul>
 </div>
 ]]></summary>
 </entry>
@@ -151,9 +429,9 @@ first  f (x,y) <span class="fu">=</span> (f x, y)
 <span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)
 second f (x,y) <span class="fu">=</span> (x, f y)</code></pre>
 <p>Let's bring up GHCi for some tests:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
 (<span class="dv">1</span>,<span class="st">&quot;bar&quot;</span>)
-λ&gt; second (<span class="fu">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span>
+λ<span class="fu">&gt;</span> second (<span class="fu">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span>
 (<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre>
 <h1 id="editing-a-function">Editing a function</h1>
 <p>There's two way of editing a function: we can either modify the return value (the <code>result</code> combinator), or modify the argument (the <code>argument</code> combinator).</p>
@@ -184,7 +462,7 @@ result f g x <span class="fu">=</span> f (g x)</code></pre>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
 result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
 <span class="dv">7</span></code></pre>
 <h2 id="the-argument-combinator">the <code>argument</code> combinator</h2>
 <p>Use the same approach, let’s implement <code>argument</code> combinator:</p>
@@ -217,7 +495,7 @@ argument f g x <span class="fu">=</span> g (f x)</code></pre>
 <span class="co">-- point-free style of: argument f g x = flip (.) f g x</span>
 argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
 <span class="st">&quot;2048!&quot;</span></code></pre>
 <h1 id="walking-into-data">Walking into data</h1>
 <p>For now we have <code>first</code> and <code>second</code> to work with pairs, and <code>argument</code> and <code>result</code> with functions, but sometimes we want to go deeper inside data, say:</p>
@@ -228,22 +506,22 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>Here I try to give some explanation of how to do this.</p>
 <h2 id="goal-1">Goal 1</h2>
 <p>To modify <code>d</code> in <code>(a,(c,d))</code>, that means we need to first focus on <code>(c,d)</code>, this can be achieved by <code>second</code>, let’s pass a const function <code>const &quot;Focus&quot;</code> to <code>second</code>, so we know we are focusing on which portion of the data:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
-λ&gt; <span class="kw">let</span> toFocus <span class="fu">=</span> const <span class="st">&quot;Focus&quot;</span>
-λ&gt; second toFocus d1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
+λ<span class="fu">&gt;</span> <span class="kw">let</span> toFocus <span class="fu">=</span> const <span class="st">&quot;Focus&quot;</span>
+λ<span class="fu">&gt;</span> second toFocus d1
 (<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre>
 <p>We now know that missing <code>(2,1)</code> is passed to <code>toFocus</code>, we can use a lambda expression to capture it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; second (\x <span class="ot">-&gt;</span> x) d1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
 (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre>
 <p>Let's do something more interesting:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
 (<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre>
 <p>The observation is: inside the body of lambda expression <code>\x -&gt; ...</code>, we can do something to <code>(2,1)</code>. That means we can apply semantic editor combinators on it!</p>
 <p>Now assume we are dealing with <code>(2,1)</code>, to reach the goal, we apply <code>const 5</code> to its <code>fst</code> part:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
 (<span class="dv">5</span>,<span class="dv">1</span>)</code></pre>
 <p>Now replace the body of <code>\x -&gt; ...</code> with what we want:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
 (<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre>
 <p>Done!</p>
 <h2 id="some-intuition">Some intuition</h2>
@@ -256,27 +534,27 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>It might not be straightforward at first glance, since function composition is usually “right to left”, that is, <code>(g . f)</code> means “first apply <code>f</code>, on its result, apply <code>g</code>. But here, <code>second . first</code> can be read as”walk to the <code>snd</code> part, and then <code>fst</code> part of it“.</p>
 <p>My explanation is: <strong>the function does compose from right to left, but what’s “carrying” with the composition is not the data</strong>.</p>
 <p>The observation is: no matter how many functions are composed together, the resulting function just takes one argument:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> u <span class="fu">=</span> undefined
-λ&gt; <span class="fu">:</span>t u <span class="fu">.</span> u
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u
 u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
-λ&gt; <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
 u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
-λ&gt; <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
 u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre>
 <p>So what is the argument taken by this resulting function? In our Goal 1, it is <code>const 5</code>, the “how we modify it” part. So despite that <code>(second . first) (const 5) d1</code> is simple, to understand it, what you really need would be: <code>((second . first) (const 5)) d1</code></p>
 <p>The observation is: <strong>functions are composed from right to left and the mutator is buried more deeply as the composition goes</strong>.</p>
 <p>To see this, let's just pick up combinators randomly to form a chain of function composition, and check its type:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="fu">:</span>t first (const <span class="dv">5</span>)
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
 first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (a, d) <span class="ot">-&gt;</span> (b, d)
-λ&gt; <span class="fu">:</span>t (second <span class="fu">.</span> first) (const <span class="dv">5</span>)
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (second <span class="fu">.</span> first) (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, (a, d)) <span class="ot">-&gt;</span> (c, (b, d))
-λ&gt; <span class="fu">:</span>t (result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t (result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 <span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c <span class="ot">-&gt;</span> (c1, (a, d))) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> (c1, (b, d))
-λ&gt; <span class="fu">:</span>t (second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 <span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (a, d))) <span class="ot">-&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (b, d)))
-λ&gt; <span class="fu">:</span>t (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
+λ<span class="fu">&gt;</span> <span class="fu">:</span>t (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 <span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span>
      ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre>
@@ -298,19 +576,19 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>apply <code>(* 2)</code></li>
 </ul>
 <p>Try it out:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
-λ&gt; <span class="kw">let</span> m2 <span class="fu">=</span> (result <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> first) (<span class="fu">*</span><span class="dv">2</span>) d2
-λ&gt; (snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
+λ<span class="fu">&gt;</span> <span class="kw">let</span> m2 <span class="fu">=</span> (result <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> first) (<span class="fu">*</span><span class="dv">2</span>) d2
+λ<span class="fu">&gt;</span> (snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>
 (<span class="dv">30</span>,<span class="dv">1</span>)
-λ&gt; (snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>
+λ<span class="fu">&gt;</span> (snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>
 (<span class="dv">60</span>,<span class="dv">1</span>)
-λ&gt; fst ((snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>)
+λ<span class="fu">&gt;</span> fst ((snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>)
 <span class="dv">30</span>
-λ&gt; fst ((snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>)
+λ<span class="fu">&gt;</span> fst ((snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>)
 <span class="dv">60</span>
-λ&gt; (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) d2
+λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) d2
 <span class="dv">30</span>
-λ&gt; (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) m2
+λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) m2
 <span class="dv">60</span></code></pre>
 <p>Last two programs are just rewriting the two programs right before it, Do you notice the symmetry between <code>fst . ($ 20) . snd . ($ 10)</code> and <code>result . second . result . first</code>?</p>
 <p>I believe this is not an accident, but to explain it might beyond my reach, this is what I have for now:</p>
@@ -373,19 +651,19 @@ inPos n f xs
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre>
 <p>Some examples:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
-λ&gt; (second <span class="fu">.</span> element) (<span class="fu">+</span> <span class="dv">1</span>) d1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
+λ<span class="fu">&gt;</span> (second <span class="fu">.</span> element) (<span class="fu">+</span> <span class="dv">1</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>])
-λ&gt; (first <span class="fu">.</span> element) ord d1
+λ<span class="fu">&gt;</span> (first <span class="fu">.</span> element) ord d1
 ([<span class="dv">102</span>,<span class="dv">111</span>,<span class="dv">111</span>],[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ&gt; (second <span class="fu">.</span> inTail) (take <span class="dv">2</span>) d1
+λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inTail) (take <span class="dv">2</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>])
-λ&gt; (second <span class="fu">.</span> inHead) (<span class="fu">*</span> <span class="dv">200</span>) d1
+λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inHead) (<span class="fu">*</span> <span class="dv">200</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">200</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ&gt; (second <span class="fu">.</span> inPos <span class="dv">3</span>) (<span class="fu">*</span> <span class="dv">200</span>) d1
+λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inPos <span class="dv">3</span>) (<span class="fu">*</span> <span class="dv">200</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">800</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ&gt; <span class="kw">let</span> d2 <span class="fu">=</span> replicate <span class="dv">3</span> (replicate <span class="dv">4</span> <span class="dv">0</span>)
-λ&gt; (inPos <span class="dv">1</span> <span class="fu">.</span> inPos <span class="dv">2</span>) (const <span class="dv">255</span>) d2
+λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> replicate <span class="dv">3</span> (replicate <span class="dv">4</span> <span class="dv">0</span>)
+λ<span class="fu">&gt;</span> (inPos <span class="dv">1</span> <span class="fu">.</span> inPos <span class="dv">2</span>) (const <span class="dv">255</span>) d2
 [[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre>
 <h1 id="walking-into-user-defined-data">Walking into user defined data</h1>
 <p>Suppose user has defined a binary tree:</p>
@@ -419,43 +697,43 @@ treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span 
 <p><code>treeLeft</code> and <code>treeRight</code> walks into left subtree and right subtree, respectively. But to target at the value of a <code>BinTree</code>, we need <code>treeV</code>, which takes care of walking into the data field of a tree.</p>
 <p><code>treeNonLeaf</code> and <code>treeLeaf</code> are just like <code>treeElement</code> but works merely on non-leaf nodes and leaf nodes, respectively.</p>
 <p>See them in action:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ&gt; (treeElement <span class="fu">.</span> first) even d1 <span class="co">-- test for each node, if the `fst` part is an even?</span>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
+λ<span class="fu">&gt;</span> (treeElement <span class="fu">.</span> first) even d1 <span class="co">-- test for each node, if the `fst` part is an even?</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">2</span>)) (<span class="dt">True</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">4</span>)) (<span class="dt">False</span>,<span class="dv">6</span>)
-λ&gt; (treeLeft <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span>
+λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ&gt; (treeLeft <span class="fu">.</span> treeRight <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into the right subtree of the left subtree, ..</span>
+λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeRight <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into the right subtree of the left subtree, ..</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">4</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ&gt; (treeNonLeaf <span class="fu">.</span> first) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span>
+λ<span class="fu">&gt;</span> (treeNonLeaf <span class="fu">.</span> first) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">100</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">100</span>,<span class="dv">6</span>)
-λ&gt; (treeLeaf <span class="fu">.</span> second) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span>
+λ<span class="fu">&gt;</span> (treeLeaf <span class="fu">.</span> second) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre>
 <h1 id="combining-semantic-editor-combinators">Combining semantic editor combinators</h1>
 <p>The semantic editor combinators can also be chained together.</p>
 <p>Suppose we have some combinators:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
-λ&gt; <span class="kw">let</span> c05 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">5</span>)
-λ&gt; <span class="kw">let</span> c06 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">6</span>)
-λ&gt; <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre>
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
+λ<span class="fu">&gt;</span> <span class="kw">let</span> c05 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">5</span>)
+λ<span class="fu">&gt;</span> <span class="kw">let</span> c06 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">6</span>)
+λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre>
 <p>For a given list, we want to apply <code>c13</code> and <code>c05</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
-λ&gt; c06 (c13 d)
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
+λ<span class="fu">&gt;</span> c06 (c13 d)
 [<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]
-λ&gt; (c06 <span class="fu">.</span> c13) d
+λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c13) d
 [<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre>
 <p>So we can use function composition to compose semantic editors:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
-λ&gt; (cf1 <span class="fu">.</span> (second c13)) d2
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
+λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13)) d2
 (<span class="dv">1</span>,[<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
-λ&gt; (cf1 <span class="fu">.</span> (second c13) <span class="fu">.</span> (second c05)) d2
+λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13) <span class="fu">.</span> (second c05)) d2
 (<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
-λ&gt; (cf1 <span class="fu">.</span> (second (c13 <span class="fu">.</span> c05))) d2
+λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second (c13 <span class="fu">.</span> c05))) d2
 (<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre>
 <p>The last example says “apply <code>1</code>, (back to the top level and then) walk into the <code>snd</code> part, apply <code>c05</code> and then <code>c13</code>”. I think this “distributive property” will make things extremely flexible.</p>
 <p>Since the function composition happens from right to left, if some combinators are trying to modify the same field, the “leftmost” one take effect:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
 [<span class="dv">5</span>,<span class="dv">1</span>]
-λ&gt; (c06 <span class="fu">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]
+λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]
 [<span class="dv">6</span>,<span class="dv">1</span>]</code></pre>
 </div>
 ]]></summary>
@@ -644,7 +922,7 @@ Matrix: [
 [0,0,0,5]
 ]</code></pre>
 <h1 id="complete-code">Complete code</h1>
-<p>You can find my complete code from <a href="https://gist.github.com/Javran/9593215">gist</a>).</p>
+<p>You can find my complete code from <a href="https://gist.github.com/Javran/9593215">gist</a>.</p>
 </div>
 ]]></summary>
 </entry>
@@ -660,7 +938,7 @@ Matrix: [
 <span class="blog-tag">
     
         [ 
-        <a href="/tags/tyoe-tetris.html">tyoe-tetris</a>, <a href="/tags/haskell.html">haskell</a>
+        <a href="/tags/type-tetris.html">type-tetris</a>, <a href="/tags/haskell.html">haskell</a>
         ]
     
 </span>
@@ -692,28 +970,28 @@ v4 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> pure <span 
 <span class="ot">v5 ::</span> <span class="dt">Maybe</span> ()
 v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty</code></pre>
 <p>Let's bring up GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 []
-λ&gt; v2
+λ<span class="fu">&gt;</span> v2
 [<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>]
-λ&gt; v3
+λ<span class="fu">&gt;</span> v3
 <span class="dt">Just</span> <span class="dv">10</span>
-λ&gt; v4
+λ<span class="fu">&gt;</span> v4
 <span class="dt">Just</span> <span class="ch">&#39;A&#39;</span>
-λ&gt; v5
+λ<span class="fu">&gt;</span> v5
 <span class="dt">Nothing</span></code></pre>
 <p><code>empty</code> works like what we expected, and <code>&lt;|&gt;</code> for lists seems straightforward. But when it comes to <code>Maybe</code>, we find that only the first non-<code>Nothing</code> one takes effect, if any.</p>
 <h1 id="some-and-many"><code>some</code> and <code>many</code></h1>
-<p>The tyoe for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
+<p>The type for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]
 v6 <span class="fu">=</span> some [<span class="st">&quot;not working&quot;</span>]
 
 <span class="ot">v7 ::</span> [[<span class="dt">String</span>]]
 v7 <span class="fu">=</span> some empty</code></pre>
 <p>But when I try this out on GHCi, something is going wrong:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v6
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v6
 <span class="fu">^</span><span class="dt">CInterrupted</span><span class="fu">.</span>
-λ&gt; v7
+λ<span class="fu">&gt;</span> v7
 []</code></pre>
 <p>I gave <code>v6</code> some time to run but it didn't terminate, so I cancelled it by hand.</p>
 <p>By looking at the document, I find some clue: <code>some</code> and <code>many</code> seem to look for some solutions to the following equations:</p>
@@ -732,26 +1010,26 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 <h1 id="optional"><code>optional</code></h1>
 <p>For the rest of the story, I'll just type them directly into GHCi.</p>
 <p>The last function about <code>Alternative</code> is <code>optional</code>, Let's check its type and feed it with some instances:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="fu">:</span>t optional
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t optional
 <span class="ot">optional ::</span> <span class="dt">Alternative</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ&gt; optional <span class="dt">Nothing</span>
+λ<span class="fu">&gt;</span> optional <span class="dt">Nothing</span>
 <span class="dt">Just</span> <span class="dt">Nothing</span>
-λ&gt; optional <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">1</span>
+λ<span class="fu">&gt;</span> optional <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">1</span>
 <span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ&gt; optional []
+λ<span class="fu">&gt;</span> optional []
 [<span class="dt">Nothing</span>]
-λ&gt; optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
+λ<span class="fu">&gt;</span> optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
 [<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</code></pre>
 <p>Wait a minute, is <code>f a -&gt; f (Maybe a)</code> looks familiar to you? It looks like an unary function that has type <code>a -&gt; Maybe a</code> under some contexts. I think the simplest expression that matches this type would be <code>(Just &lt;$&gt;)</code>. Let's do the same thing on it.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
 (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)<span class="ot"> ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
 <span class="dt">Nothing</span>
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span>
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span>
 <span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
 []
-λ&gt; (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
+λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
 [<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</code></pre>
 <p>Comparing the output of <code>optional</code> and <code>(Just &lt;$&gt;)</code>, we find that <code>optional</code> will attach an <code>empty</code> to the end of this monoid. And that <code>empty</code> would be the “none” part from <code>optional</code>'s description: “One or none”. In addition, we've seen <code>&lt;|&gt;</code> is the binary operation for this monoid, so we can have a guess:</p>
 <pre><code>optional v = (Just &lt;$&gt; v) &lt;|&gt; pure Nothing</code></pre>
@@ -801,11 +1079,11 @@ v2 <span class="fu">=</span> <span class="dt">Free</span> [v1]
 <span class="ot">v3 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
 v3 <span class="fu">=</span> <span class="dt">Free</span> [v2,v2,v1]</code></pre>
 <p>Call GHCi to see the values:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 <span class="dt">Pure</span> <span class="dv">10</span>
-λ&gt; v2
+λ<span class="fu">&gt;</span> v2
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>]
-λ&gt; v3
+λ<span class="fu">&gt;</span> v3
 <span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</code></pre>
 <h1 id="free-monad-is-a-monad">Free monad is a monad</h1>
 <p>Of course free monad should be a monad, let's check the document to find some clues, in the instance list of <code>data Free f a</code>, we find this line:</p>
@@ -820,7 +1098,7 @@ foo2 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">
 <span class="ot">v4 ::</span> <span class="dt">Free</span> [] <span class="dt">String</span>
 v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2</code></pre>
 <p>And the GHCi output is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v4
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v4
 <span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]
            ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
@@ -829,7 +1107,7 @@ v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span cla
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]]
            ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;100&quot;</span>]
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;70&quot;</span>]]]]
-λ&gt; <span class="fu">:</span>{
+λ<span class="fu">&gt;</span> <span class="fu">:</span>{
 <span class="fu">|</span> <span class="kw">let</span> foo1 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [x<span class="fu">*</span><span class="dv">2</span>,x<span class="fu">+</span><span class="dv">20</span>]
 <span class="fu">|</span>     foo2 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [show x]
 <span class="fu">|</span> <span class="kw">in</span> [<span class="dv">10</span>] <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2
@@ -852,9 +1130,9 @@ v8 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Ju
 <span class="ot">v9 ::</span> <span class="dt">Free</span> ((<span class="ot">-&gt;</span>) <span class="dt">Int</span>) <span class="dt">Int</span>
 v9 <span class="fu">=</span> liftF (<span class="fu">+</span> <span class="dv">10</span>)</code></pre>
 <p>I don't know if there is an easy way of observing <code>v9</code>, for now we just print <code>v7</code> and <code>v8</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v7
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v7
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">1</span>,<span class="dt">Pure</span> <span class="dv">2</span>,<span class="dt">Pure</span> <span class="dv">3</span>,<span class="dt">Pure</span> <span class="dv">4</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>]
-λ&gt; v8
+λ<span class="fu">&gt;</span> v8
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</code></pre>
 <p>Now we know we can lift any functors, so <strong>we can construct <code>Free f a</code> not only from <code>Pure</code> and <code>Free</code>, but also directly from functors.</strong></p>
 <p>Now think about simplified type signature of <code>retract :: Free [] a -&gt; [a]</code>. <strong>it is the reverse of <code>liftF</code></strong>. Let's have a try in code:</p>
@@ -870,13 +1148,13 @@ v12 <span class="fu">=</span> retract v4
 <span class="ot">v13 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
 v13 <span class="fu">=</span> retract v9</code></pre>
 <p>Call GHCi for results, now we can observe <code>v9</code> indirectly by using function <code>v13</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v10
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v10
 [<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">10</span>]
-λ&gt; v11
+λ<span class="fu">&gt;</span> v11
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ&gt; v12
+λ<span class="fu">&gt;</span> v12
 [<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]
-λ&gt; map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
+λ<span class="fu">&gt;</span> map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
 [<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</code></pre>
 <p>Therefore <strong><code>retract</code> converts a free monad back to a functor</strong>. (I suspect this conclusion is somehow wrong, but for now I cannot tell what exactly is wrong.)</p>
 <h1 id="iter-and-iterm"><code>iter</code> and <code>iterM</code></h1>
@@ -894,9 +1172,9 @@ foo3 ms <span class="fu">=</span> sum <span class="ot">`fmap`</span> sequence ms
 <span class="ot">v15 ::</span> <span class="dt">IO</span> <span class="dt">Int</span>
 v15 <span class="fu">=</span> iterM foo3 v7</code></pre>
 <p>And look at GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v14
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v14
 <span class="dv">30</span>
-λ&gt; v15
+λ<span class="fu">&gt;</span> v15
 <span class="dv">34</span></code></pre>
 <p>Maybe I can say that <strong><code>iter</code> and <code>iterM</code> lift reduction (for functors) into free monads</strong></p>
 <h1 id="hoistfree"><code>hoistFree</code></h1>
@@ -911,9 +1189,9 @@ v16 <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quo
 <span class="ot">v17 ::</span> [<span class="dt">String</span>]
 v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeToList <span class="fu">$</span> liftF v16</code></pre>
 <p>Look at GHCi, we should observe the conversion from <code>Maybe String</code> to <code>[String]</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v16
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v16
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ&gt; v17
+λ<span class="fu">&gt;</span> v17
 [<span class="st">&quot;Foo&quot;</span>]</code></pre>
 <h1 id="pure-and-_free"><code>_Pure</code> and <code>_Free</code></h1>
 <p>The type signatures of these two functions are really long, but don't be afraid, we still have some clue:</p>
@@ -947,13 +1225,13 @@ v20 <span class="fu">=</span> _<span class="dt">Free</span> return (liftF <span 
 <span class="ot">v21 ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> <span class="dt">Int</span>)
 v21 <span class="fu">=</span> retract <span class="ot">`fmap`</span> v20</code></pre>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v18
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v18
 [<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Haskell&quot;</span>))]
-λ&gt; v19
+λ<span class="fu">&gt;</span> v19
 [<span class="st">&quot;Haskell&quot;</span>]
-λ&gt; v20
+λ<span class="fu">&gt;</span> v20
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">123456</span>))
-λ&gt; v21
+λ<span class="fu">&gt;</span> v21
 <span class="dt">Just</span> <span class="dv">123456</span></code></pre>
 <h1 id="wrap-method"><code>wrap</code> method</h1>
 <p>This is a method defined for <code>MonadFree</code>s, the document says <strong>“Add a layer.”</strong>, let's see it in action:</p>
@@ -966,11 +1244,11 @@ v23 <span class="fu">=</span> wrap (<span class="dt">Just</span> v22)
 <span class="ot">v24 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
 v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pre>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v22
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v22
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))
-λ&gt; v23
+λ<span class="fu">&gt;</span> v23
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))
-λ&gt; v24
+λ<span class="fu">&gt;</span> v24
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</code></pre>
 <h1 id="call-it-a-day">Call it a day</h1>
 <p>This is the first time I attempted to do a “type-tetris”, although I still don't know what is free monad, but I do get some intuitions by using the functions provided. So let's call it a day.</p>
@@ -1056,7 +1334,7 @@ tags: bar1, bar2
 <p>Insert the following code in front of it:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
 tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre>
-<p>The code region above says: find all tags by searching the metadate of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
+<p>The code region above says: find all tags by searching the metadata of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
 <p>After tags are generated, we need to tell the post generator to include the corresponding tag informations for each tag, this is done by modifying <code>postCtx</code>. (for now you don't have to understand the detail of <code>postCtx</code> if you just want to setup up tags.)</p>
 <p>Put the following definition somewhere in your <code>site.hs</code>, I choose to put it right after the definition of <code>postCtx</code>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
@@ -1201,59 +1479,6 @@ $body$</code></pre>
 <p>The most helpful thing provided by Hakyll's website finally turns out to be <a href="http://jaspervdj.be/hakyll/examples.html">these example websites with source codes</a>. I figured out how to add and organize tags by looking at some source codes from these websites.</p>
 <p>So the next thing I can think about, is to write a tutorial about how I add tags to my own blog. I believe this will familiarize myself with Hakyll, and make more features available to Hakyll newbies like me.</p>
 <p>However, you should never expect that tutorial coming out quickly, as things are getting me really busy these days.</p>
-</div>
-]]></summary>
-</entry>
-<entry>
-    <title>Keep thinking</title>
-    <link href="http://javran.github.io//posts/2013-04-19-keep-thinking.html" />
-    <id>http://javran.github.io//posts/2013-04-19-keep-thinking.html</id>
-    <published>2013-04-19T00:00:00Z</published>
-    <updated>2013-04-19T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<span class="blog-date">
-    2013-04-19 - 
-</span>
-<span class="blog-tag">
-    
-        [ 
-        <a href="/tags/thought.html">thought</a>
-        ]
-    
-</span>
-<br />
-<br />
-<div class="blog-main">
-<p>Many things have changed since last update. It might be a good pretext that I'm doing my internship so have no time to get things updated here.</p>
-<p>Anyway, At least I'm still trying to make me active by commit codes to github.com :)</p>
-<h1 id="what-ive-done-for-these-days">What I've done for these days?</h1>
-<p>Working on my repo: <a href="https://github.com/Javran/Thinking-dumps">thinking-dumps</a>, I think it's a great idea to force myself keep doing things that can extend my knowledge.</p>
-<p>I've finished reading on 2 books:</p>
-<ul>
-<li><p>Seven Languages in Seven Weeks</p>
-<p>Great book that show me 7 different programming languages.</p></li>
-<li><p>Teach Yourself Scheme in Fixnum Days</p>
-<p>I'd like to start reading SICP, and I think some basic knowledge about Scheme might be helpful.</p></li>
-</ul>
-<h1 id="what-im-doing">What I'm doing?</h1>
-<ul>
-<li><p>SICP</p>
-<p>Now I'm working on <a href="http://mitpress.mit.edu/sicp/">SICP</a>. I felt excited when I found the last task was to implement a complier of Scheme. And it will be a great work if I can complete all the exercises in this book.</p></li>
-<li><p>F Sharp</p>
-<p>Just want to learn another language. And since F# is a member of .Net language, I think I can use it as well as take advantage of other .Net languages (mainly C#) in my future time. BTW: LINQ is great, which brings some concepts from functional programming into .Net's world :) The book I'm currently working with is “Programming F#”. You can see it is a branch in my repo. I'd merge it into master branch as soon as I've finish exploring this book.</p></li>
-<li><p>Internship</p>
-<p>Of course I need to do my real job. It is a good job that I have interest in, despite sometimes I felt exhausted or disappointed.</p></li>
-</ul>
-<h1 id="what-im-going-to-do">What I'm going to do?</h1>
-<ul>
-<li><p>Programming with Haskell</p>
-<p>Haskell is my favorite! I'll like to read Real World Haskell, and come up with some applications.</p></li>
-<li>writing a sudoku solver</li>
-<li>writing a sokoban game with GUI</li>
-<li>exploring xmonad</li>
-<li><p>a snake game solver (by finding Eulerian paths) (try to use ncurse bindings)</p></li>
-</ul>
-<p>I'll try to achieve things listed above, but I have no idea about when I'll achieve all of them.</p>
-<p>All in all, I'd like to keep thinking and be ready to share everything I have explored.</p>
 </div>
 ]]></summary>
 </entry>

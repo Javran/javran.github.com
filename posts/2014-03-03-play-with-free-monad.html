@@ -96,11 +96,11 @@ v2 <span class="fu">=</span> <span class="dt">Free</span> [v1]
 <span class="ot">v3 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
 v3 <span class="fu">=</span> <span class="dt">Free</span> [v2,v2,v1]</code></pre>
 <p>Call GHCi to see the values:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v1
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 <span class="dt">Pure</span> <span class="dv">10</span>
-λ&gt; v2
+λ<span class="fu">&gt;</span> v2
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>]
-λ&gt; v3
+λ<span class="fu">&gt;</span> v3
 <span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</code></pre>
 <h1 id="free-monad-is-a-monad">Free monad is a monad</h1>
 <p>Of course free monad should be a monad, let's check the document to find some clues, in the instance list of <code>data Free f a</code>, we find this line:</p>
@@ -115,7 +115,7 @@ foo2 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">
 <span class="ot">v4 ::</span> <span class="dt">Free</span> [] <span class="dt">String</span>
 v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2</code></pre>
 <p>And the GHCi output is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v4
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v4
 <span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]
            ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
@@ -124,7 +124,7 @@ v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span cla
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]]
            ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;100&quot;</span>]
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;70&quot;</span>]]]]
-λ&gt; <span class="fu">:</span>{
+λ<span class="fu">&gt;</span> <span class="fu">:</span>{
 <span class="fu">|</span> <span class="kw">let</span> foo1 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [x<span class="fu">*</span><span class="dv">2</span>,x<span class="fu">+</span><span class="dv">20</span>]
 <span class="fu">|</span>     foo2 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [show x]
 <span class="fu">|</span> <span class="kw">in</span> [<span class="dv">10</span>] <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2
@@ -147,9 +147,9 @@ v8 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Ju
 <span class="ot">v9 ::</span> <span class="dt">Free</span> ((<span class="ot">-&gt;</span>) <span class="dt">Int</span>) <span class="dt">Int</span>
 v9 <span class="fu">=</span> liftF (<span class="fu">+</span> <span class="dv">10</span>)</code></pre>
 <p>I don't know if there is an easy way of observing <code>v9</code>, for now we just print <code>v7</code> and <code>v8</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v7
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v7
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">1</span>,<span class="dt">Pure</span> <span class="dv">2</span>,<span class="dt">Pure</span> <span class="dv">3</span>,<span class="dt">Pure</span> <span class="dv">4</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>]
-λ&gt; v8
+λ<span class="fu">&gt;</span> v8
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</code></pre>
 <p>Now we know we can lift any functors, so <strong>we can construct <code>Free f a</code> not only from <code>Pure</code> and <code>Free</code>, but also directly from functors.</strong></p>
 <p>Now think about simplified type signature of <code>retract :: Free [] a -&gt; [a]</code>. <strong>it is the reverse of <code>liftF</code></strong>. Let's have a try in code:</p>
@@ -165,13 +165,13 @@ v12 <span class="fu">=</span> retract v4
 <span class="ot">v13 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
 v13 <span class="fu">=</span> retract v9</code></pre>
 <p>Call GHCi for results, now we can observe <code>v9</code> indirectly by using function <code>v13</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v10
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v10
 [<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">10</span>]
-λ&gt; v11
+λ<span class="fu">&gt;</span> v11
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ&gt; v12
+λ<span class="fu">&gt;</span> v12
 [<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]
-λ&gt; map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
+λ<span class="fu">&gt;</span> map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
 [<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</code></pre>
 <p>Therefore <strong><code>retract</code> converts a free monad back to a functor</strong>. (I suspect this conclusion is somehow wrong, but for now I cannot tell what exactly is wrong.)</p>
 <h1 id="iter-and-iterm"><code>iter</code> and <code>iterM</code></h1>
@@ -189,9 +189,9 @@ foo3 ms <span class="fu">=</span> sum <span class="ot">`fmap`</span> sequence ms
 <span class="ot">v15 ::</span> <span class="dt">IO</span> <span class="dt">Int</span>
 v15 <span class="fu">=</span> iterM foo3 v7</code></pre>
 <p>And look at GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v14
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v14
 <span class="dv">30</span>
-λ&gt; v15
+λ<span class="fu">&gt;</span> v15
 <span class="dv">34</span></code></pre>
 <p>Maybe I can say that <strong><code>iter</code> and <code>iterM</code> lift reduction (for functors) into free monads</strong></p>
 <h1 id="hoistfree"><code>hoistFree</code></h1>
@@ -206,9 +206,9 @@ v16 <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quo
 <span class="ot">v17 ::</span> [<span class="dt">String</span>]
 v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeToList <span class="fu">$</span> liftF v16</code></pre>
 <p>Look at GHCi, we should observe the conversion from <code>Maybe String</code> to <code>[String]</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v16
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v16
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ&gt; v17
+λ<span class="fu">&gt;</span> v17
 [<span class="st">&quot;Foo&quot;</span>]</code></pre>
 <h1 id="pure-and-_free"><code>_Pure</code> and <code>_Free</code></h1>
 <p>The type signatures of these two functions are really long, but don't be afraid, we still have some clue:</p>
@@ -242,13 +242,13 @@ v20 <span class="fu">=</span> _<span class="dt">Free</span> return (liftF <span 
 <span class="ot">v21 ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> <span class="dt">Int</span>)
 v21 <span class="fu">=</span> retract <span class="ot">`fmap`</span> v20</code></pre>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v18
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v18
 [<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Haskell&quot;</span>))]
-λ&gt; v19
+λ<span class="fu">&gt;</span> v19
 [<span class="st">&quot;Haskell&quot;</span>]
-λ&gt; v20
+λ<span class="fu">&gt;</span> v20
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">123456</span>))
-λ&gt; v21
+λ<span class="fu">&gt;</span> v21
 <span class="dt">Just</span> <span class="dv">123456</span></code></pre>
 <h1 id="wrap-method"><code>wrap</code> method</h1>
 <p>This is a method defined for <code>MonadFree</code>s, the document says <strong>“Add a layer.”</strong>, let's see it in action:</p>
@@ -261,11 +261,11 @@ v23 <span class="fu">=</span> wrap (<span class="dt">Just</span> v22)
 <span class="ot">v24 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
 v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pre>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ&gt; v22
+<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v22
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))
-λ&gt; v23
+λ<span class="fu">&gt;</span> v23
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))
-λ&gt; v24
+λ<span class="fu">&gt;</span> v24
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</code></pre>
 <h1 id="call-it-a-day">Call it a day</h1>
 <p>This is the first time I attempted to do a “type-tetris”, although I still don't know what is free monad, but I do get some intuitions by using the functions provided. So let's call it a day.</p>

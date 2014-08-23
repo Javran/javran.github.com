@@ -136,7 +136,7 @@ tags: bar1, bar2
 <p>Insert the following code in front of it:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
 tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre>
-<p>The code region above says: find all tags by searching the metadate of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
+<p>The code region above says: find all tags by searching the metadata of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
 <p>After tags are generated, we need to tell the post generator to include the corresponding tag informations for each tag, this is done by modifying <code>postCtx</code>. (for now you don't have to understand the detail of <code>postCtx</code> if you just want to setup up tags.)</p>
 <p>Put the following definition somewhere in your <code>site.hs</code>, I choose to put it right after the definition of <code>postCtx</code>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
