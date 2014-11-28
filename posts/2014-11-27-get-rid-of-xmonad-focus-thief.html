@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content>
+    <meta name="author" content>
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+
+    <title>Javrania - Get Rid of XMonad Focus Thief</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+
+    <link href="../css/lavish-bootstrap.css" rel="stylesheet">
+    <link href="../css/blog.css" rel="stylesheet">
+    <link href="../css/no-transition.css" rel="stylesheet">
+    <link href="../css/default.css" rel="stylesheet">
+    <link href="../css/hk-pyg.css" rel="stylesheet">
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    
+    <script type="text/javascript">var switchTo5x=true;</script>
+    <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+    <script type="text/javascript">stLight.options(
+      { publisher: "eff44467-2bf3-4542-8683-950d62a7d47d"
+      , doNotHash: false
+      , doNotCopy: false
+      , onhover: false
+      , hashAddressBar: false});
+    </script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../">Javrania</a>
+        </div>
+        <div class="collapse navbar-collapse no-transition">
+          <ul class="nav navbar-nav">
+            <!-- <li class="active"><a href="#">Home</a></li> -->
+            <li><a href="../">Home</a></li>
+            <li><a href="../about.html">About</a></li>
+            <li><a href="../archive.html">Archive</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container">
+
+      <div id="content">
+        <div class="page-header">
+          <h1>Get Rid of XMonad Focus Thief</h1>
+        </div>
+        <span class="blog-date">
+    2014-11-27 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="../tags/xmonad.html">xmonad</a>, <a href="../tags/haskell.html">haskell</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>I've been using xmonad for a while. One annoyance found when enabling <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html">EWMH</a> (see resources in the last section of my post if you don't know what EWMH does) is that pidgin (and maybe some other programs as well) will try to request for window focus whenever xmonad starts / restarts, resulting in your focus moved to the workspace that pidgin belongs to. Today I spent some time to investigate this issue and would like to share my workaround in this post.</p>
+<h1 id="the-problem-and-my-workaround">The Problem and My Workaround</h1>
+<p>The problem arises immediately after xmonad gets started / restarted. I guess there might be some interaction to notify running X11 programs that xmonad is up. And some of these programs would respond to this nofication by sending some requests to xmonad. And the solution is simple: <strong>we make xmonad ignore focus requesting messages when xmonad just get started</strong>.</p>
+<p>This can be done by modifying xmonad state to include the time when it got started, and wrap the EWMH event handler to check if the message is “too early” before performing the action. By “too early” I meant the time difference between xmonad startup and when the message get received is below a threshold (just leave few seconds as threshold to allow your xmonad startup script gets fully executed).</p>
+<h1 id="working-on-code">Working on Code</h1>
+<p>First we use <a href="http://xmonad.org/xmonad-docs/xmonad/XMonad-Core.html#t:XState"><code>XState</code></a> to make xmonad record its startup time. This can be done easily using <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Util-ExtensibleState.html"><code>XMonad.Util.ExtensibleState</code></a> from <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/">xmonad-contrib</a>.</p>
+<p>What we need is a new type of data so that we can put it into <code>XState</code>. And the data we need is just the startup time:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span>
+<span class="kw">import </span><span class="dt">XMonad.Core</span>
+<span class="kw">import qualified</span> <span class="dt">XMonad.Util.ExtensibleState</span> <span class="kw">as</span> <span class="dt">XS</span>
+<span class="kw">import </span><span class="dt">Data.Time.Clock</span>
+<span class="kw">import </span><span class="dt">Data.Typeable</span>
+<span class="kw">import </span><span class="dt">Data.Time.Calendar</span>
+<span class="kw">newtype</span> <span class="dt">StartupTime</span> <span class="fu">=</span>
+    <span class="dt">StartupTime</span> <span class="dt">UTCTime</span>
+        <span class="kw">deriving</span> <span class="dt">Typeable</span>
+
+<span class="kw">instance</span> <span class="dt">ExtensionClass</span> <span class="dt">StartupTime</span> <span class="kw">where</span>
+    initialValue <span class="fu">=</span> <span class="dt">StartupTime</span> <span class="fu">$</span> <span class="dt">UTCTime</span> d dt
+        <span class="kw">where</span>
+            d <span class="fu">=</span> fromGregorian <span class="dv">1970</span> <span class="dv">1</span> <span class="dv">1</span>
+            dt <span class="fu">=</span> secondsToDiffTime <span class="dv">0</span></code></pre>
+<p>We don't have to deal with <code>extensionType</code>, as it is default to <code>StateExtension</code>. Of course we want the startup time updated after an xmonad restart. And actually we would never use <code>initialValue</code> since we will update it immediately after xmonad gets started, but we need to put some value here to make compiler happy, we could have put an <code>undefined</code> or <code>error &quot;msg&quot;</code> here, but I chose the safest way.</p>
+<p>Next, we modify <code>startupHook</code> to record its startup time:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span>
+
+<span class="ot">myStartupHook ::</span> <span class="dt">X</span> ()
+myStartupHook <span class="fu">=</span> <span class="kw">do</span>
+    <span class="co">-- &lt;your original startupHook, can leave this part blank&gt;</span>
+    <span class="dt">StartupTime</span> <span class="fu">&lt;$&gt;</span> liftIO getCurrentTime <span class="fu">&gt;&gt;=</span> XS.put</code></pre>
+<p>And EWMH is enabled by passing your config into <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html#v:ewmh"><code>ewmh</code></a> function so that it adds few more hooks to do its job. We make our own <code>myEwmh</code> to take care of the event handler:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
+<span class="kw">import </span>import <span class="dt">XMonad.Hooks.EwmhDesktops</span>
+
+<span class="ot">myEwmh ::</span> <span class="dt">XConfig</span> a <span class="ot">-&gt;</span> <span class="dt">XConfig</span> a
+myEwmh c <span class="fu">=</span> c { startupHook     <span class="fu">=</span> startupHook c     <span class="fu">&lt;&gt;</span> ewmhDesktopsStartup
+             , handleEventHook <span class="fu">=</span> handleEventHook c <span class="fu">&lt;&gt;</span> myEwmhDesktopsEventHook
+             , logHook         <span class="fu">=</span> logHook c         <span class="fu">&lt;&gt;</span> ewmhDesktopsLogHook
+             }</code></pre>
+<p>And finally we wrap <code>ewmhDesktopsEventHook</code> in our <code>myEwmhDesktopsEventHook</code> to add an extra guard: if the request is sent right after xmonad gets started (less than 5 seconds in my code), the request gets ignored:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span>
+myEwmhDesktopsEventHook e<span class="fu">@</span>(<span class="dt">ClientMessageEvent</span>
+    {ev_message_type <span class="fu">=</span> mt}) <span class="fu">=</span> <span class="kw">do</span>
+    a_aw <span class="ot">&lt;-</span> getAtom <span class="st">&quot;_NET_ACTIVE_WINDOW&quot;</span>
+    curTime <span class="ot">&lt;-</span> liftIO getCurrentTime
+    <span class="dt">StartupTime</span> starupTime <span class="ot">&lt;-</span> XS.get
+    <span class="kw">if</span>    mt <span class="fu">==</span> a_aw
+       <span class="fu">&amp;&amp;</span> curTime <span class="ot">`diffUTCTime`</span> starupTime <span class="fu">&lt;=</span> <span class="fl">5.0</span>
+       <span class="kw">then</span> return (<span class="dt">All</span> <span class="dt">True</span>)
+       <span class="kw">else</span> ewmhDesktopsEventHook e
+myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</code></pre>
+<p>Now you might recompile xmonad and enjoy the change.</p>
+<h1 id="resources">Resources</h1>
+<p><strong>About my config</strong></p>
+<p><a href="https://github.com/Javran/xmonad-javran">My xmonad config</a> is on github, and the changes related to my workaround is visualized <a href="https://github.com/Javran/xmonad-javran/compare/031b99ed70867697...28d98aa8cafe710624cffc">here</a>.</p>
+<p><strong>About EWMH</strong></p>
+<p>Googling <code>EWMH</code> would just give you a “tl;dr” specification which is not useful for most of the user.</p>
+<p>Simply put, <code>EWMH</code> allows your X11 programs to request for window focus. <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013920.html">One of my old post</a> and <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013921.html">the response</a> provides a little more simple explanation.</p>
+</div>
+
+<br /><br />
+<div class="pull-right">
+<span class="st_blogger_large" displayText="Blogger"></span>
+<span class="st_delicious_large" displayText="Delicious"></span>
+<span class="st_facebook_large" displayText="Facebook"></span>
+<span class="st_reddit_large" displayText="Reddit"></span>
+<span class="st_sina_large" displayText="Sina"></span>
+<span class="st_twitter_large" displayText="Tweet"></span>
+<span class="st_wordpress_large" displayText="WordPress"></span>
+</div>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+var disqus_shortname = 'javrania'; // required: replace example with your forum shortname
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+ var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+ })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+      </div>
+      
+
+    </div><!-- /.container -->
+
+
+    <div class="blog-footer">
+        Site proudly generated by
+        <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        <br />
+        Powered by
+        <a href="http://getbootstrap.com/">Bootstrap</a>
+        <br />
+        Colorized by
+        <a href="http://www.lavishbootstrap.com/">Lavish</a>
+        <br />
+                <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type">Javrania</span>
+        by <a xmlns:cc="http://creativecommons.org/ns#" href="https://github.com/Javran" property="cc:attributionName" rel="cc:attributionURL">Javran Cheng</a>
+        is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">Creative Commons Attribution 4.0 International License</a>.
+        <br /><br />
+        <a rel="license" href="http://creativecommons.org/licenses/by/4.0/deed.en_US">
+            <img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />
+
+    </div>
+    <!-- Bootstrap core JavaScript
+         ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+  </body>
+</html>

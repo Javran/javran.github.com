@@ -8,8 +8,88 @@
         <name>Javran Cheng</name>
         <email>Javran.c+fromBlogFeed@gmail.com</email>
     </author>
-    <updated>2014-08-22T00:00:00Z</updated>
+    <updated>2014-11-27T00:00:00Z</updated>
     <entry>
+    <title>Get Rid of XMonad Focus Thief</title>
+    <link href="http://javran.github.io//posts/2014-11-27-get-rid-of-xmonad-focus-thief.html" />
+    <id>http://javran.github.io//posts/2014-11-27-get-rid-of-xmonad-focus-thief.html</id>
+    <published>2014-11-27T00:00:00Z</published>
+    <updated>2014-11-27T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<span class="blog-date">
+    2014-11-27 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="/tags/xmonad.html">xmonad</a>, <a href="/tags/haskell.html">haskell</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>I've been using xmonad for a while. One annoyance found when enabling <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html">EWMH</a> (see resources in the last section of my post if you don't know what EWMH does) is that pidgin (and maybe some other programs as well) will try to request for window focus whenever xmonad starts / restarts, resulting in your focus moved to the workspace that pidgin belongs to. Today I spent some time to investigate this issue and would like to share my workaround in this post.</p>
+<h1 id="the-problem-and-my-workaround">The Problem and My Workaround</h1>
+<p>The problem arises immediately after xmonad gets started / restarted. I guess there might be some interaction to notify running X11 programs that xmonad is up. And some of these programs would respond to this nofication by sending some requests to xmonad. And the solution is simple: <strong>we make xmonad ignore focus requesting messages when xmonad just get started</strong>.</p>
+<p>This can be done by modifying xmonad state to include the time when it got started, and wrap the EWMH event handler to check if the message is “too early” before performing the action. By “too early” I meant the time difference between xmonad startup and when the message get received is below a threshold (just leave few seconds as threshold to allow your xmonad startup script gets fully executed).</p>
+<h1 id="working-on-code">Working on Code</h1>
+<p>First we use <a href="http://xmonad.org/xmonad-docs/xmonad/XMonad-Core.html#t:XState"><code>XState</code></a> to make xmonad record its startup time. This can be done easily using <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Util-ExtensibleState.html"><code>XMonad.Util.ExtensibleState</code></a> from <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/">xmonad-contrib</a>.</p>
+<p>What we need is a new type of data so that we can put it into <code>XState</code>. And the data we need is just the startup time:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span>
+<span class="kw">import </span><span class="dt">XMonad.Core</span>
+<span class="kw">import qualified</span> <span class="dt">XMonad.Util.ExtensibleState</span> <span class="kw">as</span> <span class="dt">XS</span>
+<span class="kw">import </span><span class="dt">Data.Time.Clock</span>
+<span class="kw">import </span><span class="dt">Data.Typeable</span>
+<span class="kw">import </span><span class="dt">Data.Time.Calendar</span>
+<span class="kw">newtype</span> <span class="dt">StartupTime</span> <span class="fu">=</span>
+    <span class="dt">StartupTime</span> <span class="dt">UTCTime</span>
+        <span class="kw">deriving</span> <span class="dt">Typeable</span>
+
+<span class="kw">instance</span> <span class="dt">ExtensionClass</span> <span class="dt">StartupTime</span> <span class="kw">where</span>
+    initialValue <span class="fu">=</span> <span class="dt">StartupTime</span> <span class="fu">$</span> <span class="dt">UTCTime</span> d dt
+        <span class="kw">where</span>
+            d <span class="fu">=</span> fromGregorian <span class="dv">1970</span> <span class="dv">1</span> <span class="dv">1</span>
+            dt <span class="fu">=</span> secondsToDiffTime <span class="dv">0</span></code></pre>
+<p>We don't have to deal with <code>extensionType</code>, as it is default to <code>StateExtension</code>. Of course we want the startup time updated after an xmonad restart. And actually we would never use <code>initialValue</code> since we will update it immediately after xmonad gets started, but we need to put some value here to make compiler happy, we could have put an <code>undefined</code> or <code>error &quot;msg&quot;</code> here, but I chose the safest way.</p>
+<p>Next, we modify <code>startupHook</code> to record its startup time:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span>
+
+<span class="ot">myStartupHook ::</span> <span class="dt">X</span> ()
+myStartupHook <span class="fu">=</span> <span class="kw">do</span>
+    <span class="co">-- &lt;your original startupHook, can leave this part blank&gt;</span>
+    <span class="dt">StartupTime</span> <span class="fu">&lt;$&gt;</span> liftIO getCurrentTime <span class="fu">&gt;&gt;=</span> XS.put</code></pre>
+<p>And EWMH is enabled by passing your config into <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html#v:ewmh"><code>ewmh</code></a> function so that it adds few more hooks to do its job. We make our own <code>myEwmh</code> to take care of the event handler:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
+<span class="kw">import </span>import <span class="dt">XMonad.Hooks.EwmhDesktops</span>
+
+<span class="ot">myEwmh ::</span> <span class="dt">XConfig</span> a <span class="ot">-&gt;</span> <span class="dt">XConfig</span> a
+myEwmh c <span class="fu">=</span> c { startupHook     <span class="fu">=</span> startupHook c     <span class="fu">&lt;&gt;</span> ewmhDesktopsStartup
+             , handleEventHook <span class="fu">=</span> handleEventHook c <span class="fu">&lt;&gt;</span> myEwmhDesktopsEventHook
+             , logHook         <span class="fu">=</span> logHook c         <span class="fu">&lt;&gt;</span> ewmhDesktopsLogHook
+             }</code></pre>
+<p>And finally we wrap <code>ewmhDesktopsEventHook</code> in our <code>myEwmhDesktopsEventHook</code> to add an extra guard: if the request is sent right after xmonad gets started (less than 5 seconds in my code), the request gets ignored:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span>
+myEwmhDesktopsEventHook e<span class="fu">@</span>(<span class="dt">ClientMessageEvent</span>
+    {ev_message_type <span class="fu">=</span> mt}) <span class="fu">=</span> <span class="kw">do</span>
+    a_aw <span class="ot">&lt;-</span> getAtom <span class="st">&quot;_NET_ACTIVE_WINDOW&quot;</span>
+    curTime <span class="ot">&lt;-</span> liftIO getCurrentTime
+    <span class="dt">StartupTime</span> starupTime <span class="ot">&lt;-</span> XS.get
+    <span class="kw">if</span>    mt <span class="fu">==</span> a_aw
+       <span class="fu">&amp;&amp;</span> curTime <span class="ot">`diffUTCTime`</span> starupTime <span class="fu">&lt;=</span> <span class="fl">5.0</span>
+       <span class="kw">then</span> return (<span class="dt">All</span> <span class="dt">True</span>)
+       <span class="kw">else</span> ewmhDesktopsEventHook e
+myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</code></pre>
+<p>Now you might recompile xmonad and enjoy the change.</p>
+<h1 id="resources">Resources</h1>
+<p><strong>About my config</strong></p>
+<p><a href="https://github.com/Javran/xmonad-javran">My xmonad config</a> is on github, and the changes related to my workaround is visualized <a href="https://github.com/Javran/xmonad-javran/compare/031b99ed70867697...28d98aa8cafe710624cffc">here</a>.</p>
+<p><strong>About EWMH</strong></p>
+<p>Googling <code>EWMH</code> would just give you a “tl;dr” specification which is not useful for most of the user.</p>
+<p>Simply put, <code>EWMH</code> allows your X11 programs to request for window focus. <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013920.html">One of my old post</a> and <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013921.html">the response</a> provides a little more simple explanation.</p>
+</div>
+]]></summary>
+</entry>
+<entry>
     <title>Comonad, Zipper and Conway's Game of Life (Part 2)</title>
     <link href="http://javran.github.io//posts/2014-08-22-comonad-zipper-and-conways-game-of-life.html" />
     <id>http://javran.github.io//posts/2014-08-22-comonad-zipper-and-conways-game-of-life.html</id>
@@ -1449,36 +1529,6 @@ $body$</code></pre>
 <h1 id="summary">Summary</h1>
 <p>So here I've shown you two (potential) ways of learning Haskell and fortunately you can take both ways and hope the experience gained from both sides would help each other and bring you to a higher level understanding of Haskell.</p>
 <p>For myself, as a starting point of my type-tetris, I explored a little about <a href="http://stackoverflow.com/questions/13352205/what-are-free-monads">Free Monad</a> few days about, hopefully I'll write up another article in weekends to share the code and my thoughts. For typeclassopedia, I haven't read much. A potential plan would be to play “type-tetris” with stuffs mentioned in the typeclassopedia first, and then read the corresponding chapter to shed some light.</p>
-</div>
-]]></summary>
-</entry>
-<entry>
-    <title>Yet another beginning</title>
-    <link href="http://javran.github.io//posts/2014-02-25-yet-another-beginning.html" />
-    <id>http://javran.github.io//posts/2014-02-25-yet-another-beginning.html</id>
-    <published>2014-02-25T00:00:00Z</published>
-    <updated>2014-02-25T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<span class="blog-date">
-    2014-02-25 - 
-</span>
-<span class="blog-tag">
-    
-        [ 
-        <a href="/tags/thought.html">thought</a>
-        ]
-    
-</span>
-<br />
-<br />
-<div class="blog-main">
-<p>I think it's not surprising if I say I've made my decision(again) to restart writing blogs and keeping track of my personal pages.</p>
-<p>This time I switch from <a href="https://github.com/jekyll/jekyll">jekyll</a> to <a href="http://jaspervdj.be/hakyll/">hakyll</a>. It doesn't mean jekyll is not a good choice, this is just because I feel like becoming a Haskell fans and of course I'd like to get more involved with Haskell stuffs. Hakyll, in this sense, fits me better.</p>
-<p>These days I did some sort of work to apply some themes to make my hakyll site looks better. And the final choice I come up with is to use <a href="http://getbootstrap.com/">bootstrap</a> for a basic framework, and use <a href="http://www.lavishbootstrap.com/">lavish</a> to make my own theme.</p>
-<p>After I felt good about how the website looks, I moved my past posts from jekyll to hakyll, which is actually quite easy and just quites few lines of changes. It's great that Hakyll uses <a href="http://johnmacfarlane.net/pandoc/">pandoc</a> , which is another fascinating project written in Haskell, to deal with HTML file generating. Pandoc just makes the data migration smooth and in addition makes more source file formats available (I think this is a big win comparing with jekyll).</p>
-<p>And then some other stuffs like tags were implemented last weekends, but unfortunately when I start searching for tutorials about how can I enable tags in Hakyll, there is not much documents that I can refer to. Hakyll does have some documents lying in Hackage, but I believe that these documents are incomplete and insufficient to work out all the details.</p>
-<p>The most helpful thing provided by Hakyll's website finally turns out to be <a href="http://jaspervdj.be/hakyll/examples.html">these example websites with source codes</a>. I figured out how to add and organize tags by looking at some source codes from these websites.</p>
-<p>So the next thing I can think about, is to write a tutorial about how I add tags to my own blog. I believe this will familiarize myself with Hakyll, and make more features available to Hakyll newbies like me.</p>
-<p>However, you should never expect that tutorial coming out quickly, as things are getting me really busy these days.</p>
 </div>
 ]]></summary>
 </entry>
