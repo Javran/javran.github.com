@@ -82,7 +82,7 @@ myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</cod
 <p>Now you might recompile xmonad and enjoy the change.</p>
 <h1 id="resources">Resources</h1>
 <p><strong>About my config</strong></p>
-<p><a href="https://github.com/Javran/xmonad-javran">My xmonad config</a> is on github, and the changes related to my workaround is visualized <a href="https://github.com/Javran/xmonad-javran/compare/031b99ed70867697...28d98aa8cafe710624cffc">here</a>.</p>
+<p><a href="https://github.com/Javran/xmonad-javran">My xmonad config</a> is on github, and the changes related to my workaround is visualized <a href="https://github.com/Javran/xmonad-javran/compare/031b99ed70867697...ec2fdb2afe869a62">here</a>.</p>
 <p><strong>About EWMH</strong></p>
 <p>Googling <code>EWMH</code> would just give you a “tl;dr” specification which is not useful for most of the user.</p>
 <p>Simply put, <code>EWMH</code> allows your X11 programs to request for window focus. <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013920.html">One of my old post</a> and <a href="https://www.haskell.org/pipermail/xmonad/2013-December/013921.html">the response</a> provides a little more simple explanation.</p>
