@@ -1,13 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
     <channel>
         <title>Javrania</title>
         <link>http://javran.github.io/</link>
         <description><![CDATA[Javran's blog]]></description>
         <atom:link href="http://javran.github.io//rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Thu, 27 Nov 2014 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Mon, 25 May 2015 00:00:00 UT</lastBuildDate>
         <item>
+    <title>Building ghc-7.8.4 on RHEL5</title>
+    <link>http://javran.github.io//posts/2015-05-25-building-ghc-7.8.4-on-RHEL5.html</link>
+    <description><![CDATA[<span class="blog-date">
+    2015-05-25 - 
+</span>
+<span class="blog-tag">
+    
+        [ 
+        <a href="/tags/haskell.html">haskell</a>, <a href="/tags/ghc.html">ghc</a>, <a href="/tags/linux.html">linux</a>
+        ]
+    
+</span>
+<br />
+<br />
+<div class="blog-main">
+<p>For some reasons I need to run haskell programs on a RHEL5 machine. Sadly the system packages were too old to support the latest binary, and I don't have the root privilege to install any software so have to build it from source.</p>
+<p>Here I want to share my experience of building ghc-7.8 from source in a rather old operating system.</p>
+<p>I also want to say thanks to Tim Docker, who posted <a href="https://twdkz.wordpress.com/2011/12/21/installing-ghc-7-0-3-and-the-haskell-platform-on-rhel-5-6/">an article</a> without which my post might not be possible.</p>
+<p>Basically, you need to first have a working ghc binary before you can build a newer one yourself. Please refer to <a href="https://ghc.haskell.org/trac/ghc/wiki/Building/Preparation/Tools">GHC Wiki</a> for details.</p>
+<p>We will begin with ghc-6.8.3, bootstrap ghc-6.10, ghc-7.0, ghc-7.4 and finally ghc-7.8.</p>
+<h1 id="download-related-files">Download related files</h1>
+<p>We need all the files above. For items marked with <code>(latest)</code>, just downloading the latest version instead should also work.</p>
+<p>I assume you have set the environment variable <code>SOURCES</code> (in your <code>.bashrc</code>) to the directory containing all your tarball files. (it is recommended here to use absolute path), which will also be our working directory for building up everything related.</p>
+<ul>
+<li><p>ghc</p>
+<p>If any of the following link does not work, go to <a href="https://www.haskell.org/ghc/download">this download page</a> and download them accordingly.</p>
+<ul>
+<li><a href="https://www.haskell.org/ghc/dist/6.8.3/ghc-6.8.3-x86_64-unknown-linux.tar.bz2">ghc-6.8.3-x86_64-unknown-linux.tar.bz2</a></li>
+<li><a href="https://www.haskell.org/ghc/dist/6.10.4/ghc-6.10.4-src.tar.bz2">ghc-6.10.4-src.tar.bz2</a></li>
+<li><a href="https://www.haskell.org/ghc/dist/7.0.3/ghc-7.0.3-src.tar.bz2">ghc-7.0.3-src.tar.bz2</a></li>
+<li><a href="https://www.haskell.org/ghc/dist/7.4.2/ghc-7.4.2-src.tar.bz2">ghc-7.4.2-src.tar.bz2</a></li>
+<li><a href="https://www.haskell.org/ghc/dist/7.8.4/ghc-7.8.4-src.tar.bz2">ghc-7.8.4-src.tar.bz2</a></li>
+</ul></li>
+<li><p>gcc</p>
+<p>Choose your preferred GCC mirror site on <a href="https://gcc.gnu.org/mirrors.html">this page</a>. And download the corresponding version from directory <code>releases/gcc-x.y.z</code>.</p>
+<p>All links above are based on <a href="http://mirrors.concertpass.com/">ConcertPass.com Mirror Server</a>.</p>
+<ul>
+<li><a href="http://mirrors.concertpass.com/gcc/releases/gcc-4.4.3/gcc-4.4.3.tar.bz2">gcc-4.4.3</a></li>
+<li><a href="http://mirrors.concertpass.com/gcc/releases/gcc-4.9.2/gcc-4.9.2.tar.bz2">gcc-4.9.2</a> (latest)</li>
+</ul></li>
+<li><p><a href="http://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2">binutils-2.25.tar.bz2</a> (latest)</p></li>
+<li><p>Checksum:</p>
+<pre><code>$ (cd $SOURCES; sha256sum *)
+22defc65cfa3ef2a3395faaea75d6331c6e62ea5dfacfed3e2ec17b08c882923  binutils-2.25.tar.bz2
+97ed664694b02b4d58ac2cafe443d02a388f9cb3645e7778843b5086a5fec040  gcc-4.4.3.tar.bz2
+2020c98295856aa13fda0f2f3a4794490757fc24bcca918d52cc8b4917b972dd  gcc-4.9.2.tar.bz2
+d66a8e52572f4ff819fe5c4e34c6dd1e84a7763e25c3fadcc222453c0bd8534d  ghc-6.10.4-src.tar.bz2
+07d06efa9222638c80b72ceda957d3c7bcbdc2665a9738dd6ef6c0751a05e8ed  ghc-6.8.3-x86_64-unknown-linux.tar.bz2
+156169c28dab837922260a0fbfcc873c679940d805a736dc78aeb1b60c13ccd9  ghc-7.0.3-src.tar.bz2
+f2ee1289a33cc70539287129841acc7eaf16112bb60c59b5a6ee91887bfd836d  ghc-7.4.2-src.tar.bz2
+59e3bd514a1820cc1c03e1808282205c0b8518369acae12645ceaf839e6f114b  ghc-7.8.4-src.tar.bz2</code></pre></li>
+</ul>
+<p>Note: I can only confirm that I got a working ghc-7.8.4 following these steps in this specific order. It is likely that these early versions of ghc has troubles with the latest gcc and binutils.</p>
+<h1 id="install-ghc-6.8.3">Install ghc-6.8.3</h1>
+<p>In order to get a clean installation, I will isolate each package by using a different prefix directory. But it is still okay to share the same prefix directory if you want. The major difference is that if you share prefix directory between packages, the old files might not be overwritten and thus remain there and become junk.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf ghc-6.8.3-x86_64-unknown-linux.tar.bz2
+$ <span class="kw">cd</span> ghc-6.8.3
+$ <span class="kw">mkdir</span> prefix
+$ <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-6.8.3/prefix
+$ <span class="kw">make</span> install</code></pre></div>
+<h1 id="install-ghc-6.10.4">Install ghc-6.10.4</h1>
+<p>From now on, whenever you see a <code>make</code> command without explicit goal, feel free to pass <code>-j N</code> to <code>make</code> to speed up compilation (where <code>N</code> is usually set to the number of available CPU cores plus one). If something fails, just rerun <code>make</code> (maybe with a smaller <code>N</code>), do <code>make clean</code> only if you are getting the same error message through different runs.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf ghc-6.10.4-src.tar.bz2
+$ <span class="kw">cd</span> ghc-6.10.4
+$ <span class="kw">mkdir</span> prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-6.10.4/prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<h1 id="install-gcc-4.4.3">Install gcc-4.4.3</h1>
+<p>Now you need to install a newer version of gcc. The gcc shipped with RHEL5 is gcc-4.1.2, which is too old to get ghc-7.0 compiled.</p>
+<p>The reason why we do not use the latest version of gcc is that it cannot compile ghc-7.0 either…</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf gcc-4.4.3.tar.bz2
+$ <span class="kw">tar</span> -xf gcc-4.9.2.tar.bz2</code></pre></div>
+<p>Copy a script from gcc-4.9.2 to gcc-4.4.3:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cp</span> gcc-4.9.2/contrib/download_prerequisites gcc-4.4.3/contrib/</code></pre></div>
+<p>And edit the one under gcc-4.4.3 (feel free to replace <code>$EDITOR</code> with whatever text editor you like):</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ot">$EDITOR</span> <span class="kw">gcc-4.4.3/contrib/download_prerequisites</span></code></pre></div>
+<p>Find and comment out the following line:</p>
+<pre><code># GRAPHITE_LOOP_OPT=yes</code></pre>
+<p>Go into the directory, it's time to retrieve some dependencies:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> gcc-4.4.3
+$ <span class="kw">./contrib/download_prerequisites</span></code></pre></div>
+<p>Now create another directory under gcc-4.4.3. To compile gcc you need to make your working directory different from gcc’s. Proceed with routines, remember to set prefix and enable only the necessary language. (P.S. <code>--enable-languages=c,c++</code> is necessary because to bootstrap newer versions of gcc, you will need both <code>gcc</code> and <code>g++</code>).</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">mkdir</span> prefix
+$ <span class="kw">mkdir</span> gcc-build
+$ <span class="kw">cd</span> gcc-build
+$ <span class="kw">../configure</span> --prefix <span class="ot">$SOURCES</span>/gcc-4.4.3/prefix --enable-languages=c,c++
+$ <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<p>And now gcc-4.4.3 should be ready, here we can set it permanently. Put the following line to the bottom of your <code>~/.bashrc</code> file:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># if you want to unset $SOURCES afterwards,</span>
+<span class="co"># remember to replace it with the real location.</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.4.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<p>Now verify:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
+$ <span class="kw">gcc</span> --version
+<span class="kw">gcc</span> (GCC) <span class="kw">4.4.3</span>
+<span class="kw">Copyright</span> (C) <span class="kw">2010</span> Free Software Foundation, Inc.
+<span class="kw">This</span> is free software<span class="kw">;</span> <span class="kw">see</span> the source for copying conditions.  There is NO
+<span class="kw">warranty;</span> <span class="kw">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</code></pre></div>
+<h1 id="install-ghc-7.0.3">Install ghc-7.0.3</h1>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf ghc-7.0.3-src.tar.bz2
+$ <span class="kw">cd</span> ghc-7.0.3
+$ <span class="kw">mkdir</span> prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.0.3/prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<h1 id="install-ghc-7.4.2">Install ghc-7.4.2</h1>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf ghc-7.4.2-src.tar.bz2
+$ <span class="kw">cd</span> ghc-7.4.2
+$ <span class="kw">mkdir</span> prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.4.2/prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<h1 id="optional-update-gcc-and-binutils">(Optional) Update gcc and binutils</h1>
+<p>This step might not be necessary.</p>
+<p>Some packages from hackage (for example ciper-aes) would fail because of the out-dated binutils.</p>
+<p>So before we get to 7.8.4, I want to make sure we have a newer version of toolchain, by using which we might also benefit from new optimization techniques.</p>
+<p>First we build the latest version of gcc from source.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
+$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+<span class="co"># should have been extracted when we were compiling gcc-4.4.3</span>
+$ <span class="kw">cd</span> gcc-4.9.2
+$ <span class="kw">./contrib/download_prerequisites</span>
+$ <span class="kw">mkdir</span> prefix
+$ <span class="kw">mkdir</span> gcc-build
+$ <span class="kw">cd</span> gcc-build
+$ <span class="kw">../configure</span> --prefix <span class="ot">$SOURCES</span>/gcc-4.9.2/prefix --enable-languages=c,c++
+$ <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<p>Then we can change the last few lines added to our <code>~/.bashrc</code> to:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<p>Then we build binutils:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
+$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf binutils-2.25.tar.bz2
+$ <span class="kw">cd</span> binutils-2.25
+$ <span class="kw">mkdir</span> prefix
+$ <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/binutils-2.25/prefix
+$ <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<p>And add it to <code>PATH</code> by appending these lines to your <code>~/.bashrc</code>:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<p>And don’t forget to source your <code>bashrc</code>:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc</code></pre></div>
+<h1 id="install-ghc-7.8.4">Install ghc-7.8.4</h1>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
+$ <span class="kw">tar</span> -xf ghc-7.8.4-src.tar.bz2
+$ <span class="kw">cd</span> ghc-7.8.4
+$ <span class="kw">mkdir</span> prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.8.4/prefix
+$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
+$ <span class="kw">make</span> install</code></pre></div>
+<h1 id="add-ghc-to-path-and-clean-up-.bashrc">Add ghc to PATH and Clean up <code>.bashrc</code></h1>
+<p>By now you might have a quite messy <code>$PATH</code>, don’t worry, here we will clean it up.</p>
+<p>The last few lines in your <code>.bashrc</code> will look like:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">SOURCES=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources&quot;</span>
+
+<span class="co"># if you want to unset $SOURCES afterwards,</span>
+<span class="co"># remember to replace it with the real location.</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<p>Here we add one line for ghc-7.8.4, and replace <code>$SOURCES</code> with the corresponding value (here I assume <code>SOURCE=&quot;${HOME}/sources&quot;</code>, but you need to change it accordingly).</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#export SOURCES=&quot;${HOME}/sources&quot;</span>
+
+<span class="co"># if you want to unset $SOURCES afterwards,</span>
+<span class="co"># remember to replace it with the real location.</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
+<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/ghc-7.8.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<p>Now everything is done, just logout and relogin, then you should have ghc-7.8.4 ready.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># login</span>
+$ <span class="kw">ld</span> --version
+<span class="kw">GNU</span> ld (GNU Binutils) <span class="kw">2.25</span>
+<span class="kw">Copyright</span> (C) <span class="kw">2014</span> Free Software Foundation, Inc.
+<span class="kw">This</span> program is free software<span class="kw">;</span> <span class="kw">you</span> may redistribute it under the terms of
+<span class="kw">the</span> GNU General Public License version 3 or (at your option) <span class="kw">a</span> later version.
+<span class="kw">This</span> program has absolutely no warranty.
+$ <span class="kw">gcc</span> --version
+<span class="kw">gcc</span> (GCC) <span class="kw">4.9.2</span>
+<span class="kw">Copyright</span> (C) <span class="kw">2014</span> Free Software Foundation, Inc.
+<span class="kw">This</span> is free software<span class="kw">;</span> <span class="kw">see</span> the source for copying conditions.  There is NO
+<span class="kw">warranty;</span> <span class="kw">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+$ <span class="kw">ghc</span> --version
+<span class="kw">The</span> Glorious Glasgow Haskell Compilation System, version 7.8.4</code></pre></div>
+<h1 id="afterthoughts">Afterthoughts</h1>
+<p>I hope this article might be helpful in case you want to do something similar. I like the idea of bootstrapping, but sometimes it is painful to walk through the process, especially when the working binary version is too old and you need to bootstrap multiple times.</p>
+<p>Lesson learned: backward compatibility is not always reliable. If you want some old software to work, prefering tools with version relatively recent to that software over ones with the latest version usually help.</p>
+</div>
+]]></description>
+    <pubDate>Mon, 25 May 2015 00:00:00 UT</pubDate>
+    <guid>http://javran.github.io//posts/2015-05-25-building-ghc-7.8.4-on-RHEL5.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
+</item>
+<item>
     <title>Get Rid of XMonad Focus Thief</title>
     <link>http://javran.github.io//posts/2014-11-27-get-rid-of-xmonad-focus-thief.html</link>
     <description><![CDATA[<span class="blog-date">
@@ -30,7 +232,7 @@
 <h1 id="working-on-code">Working on Code</h1>
 <p>First we use <a href="http://xmonad.org/xmonad-docs/xmonad/XMonad-Core.html#t:XState"><code>XState</code></a> to make xmonad record its startup time. This can be done easily using <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Util-ExtensibleState.html"><code>XMonad.Util.ExtensibleState</code></a> from <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/">xmonad-contrib</a>.</p>
 <p>What we need is a new type of data so that we can put it into <code>XState</code>. And the data we need is just the startup time:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span>
 <span class="kw">import </span><span class="dt">XMonad.Core</span>
 <span class="kw">import qualified</span> <span class="dt">XMonad.Util.ExtensibleState</span> <span class="kw">as</span> <span class="dt">XS</span>
 <span class="kw">import </span><span class="dt">Data.Time.Clock</span>
@@ -44,26 +246,26 @@
     initialValue <span class="fu">=</span> <span class="dt">StartupTime</span> <span class="fu">$</span> <span class="dt">UTCTime</span> d dt
         <span class="kw">where</span>
             d <span class="fu">=</span> fromGregorian <span class="dv">1970</span> <span class="dv">1</span> <span class="dv">1</span>
-            dt <span class="fu">=</span> secondsToDiffTime <span class="dv">0</span></code></pre>
+            dt <span class="fu">=</span> secondsToDiffTime <span class="dv">0</span></code></pre></div>
 <p>We don't have to deal with <code>extensionType</code>, as it is default to <code>StateExtension</code>. Of course we want the startup time updated after an xmonad restart. And actually we would never use <code>initialValue</code> since we will update it immediately after xmonad gets started, but we need to put some value here to make compiler happy, we could have put an <code>undefined</code> or <code>error &quot;msg&quot;</code> here, but I chose the safest way.</p>
 <p>Next, we modify <code>startupHook</code> to record its startup time:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span>
 
 <span class="ot">myStartupHook ::</span> <span class="dt">X</span> ()
 myStartupHook <span class="fu">=</span> <span class="kw">do</span>
     <span class="co">-- &lt;your original startupHook, can leave this part blank&gt;</span>
-    <span class="dt">StartupTime</span> <span class="fu">&lt;$&gt;</span> liftIO getCurrentTime <span class="fu">&gt;&gt;=</span> XS.put</code></pre>
+    <span class="dt">StartupTime</span> <span class="fu">&lt;$&gt;</span> liftIO getCurrentTime <span class="fu">&gt;&gt;=</span> XS.put</code></pre></div>
 <p>And EWMH is enabled by passing your config into <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html#v:ewmh"><code>ewmh</code></a> function so that it adds few more hooks to do its job. We make our own <code>myEwmh</code> to take care of the event handler:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
 <span class="kw">import </span>import <span class="dt">XMonad.Hooks.EwmhDesktops</span>
 
 <span class="ot">myEwmh ::</span> <span class="dt">XConfig</span> a <span class="ot">-&gt;</span> <span class="dt">XConfig</span> a
 myEwmh c <span class="fu">=</span> c { startupHook     <span class="fu">=</span> startupHook c     <span class="fu">&lt;&gt;</span> ewmhDesktopsStartup
              , handleEventHook <span class="fu">=</span> handleEventHook c <span class="fu">&lt;&gt;</span> myEwmhDesktopsEventHook
              , logHook         <span class="fu">=</span> logHook c         <span class="fu">&lt;&gt;</span> ewmhDesktopsLogHook
-             }</code></pre>
+             }</code></pre></div>
 <p>And finally we wrap <code>ewmhDesktopsEventHook</code> in our <code>myEwmhDesktopsEventHook</code> to add an extra guard: if the request is sent right after xmonad gets started (less than 5 seconds in my code), the request gets ignored:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span>
 myEwmhDesktopsEventHook e<span class="fu">@</span>(<span class="dt">ClientMessageEvent</span>
     {ev_message_type <span class="fu">=</span> mt}) <span class="fu">=</span> <span class="kw">do</span>
     a_aw <span class="ot">&lt;-</span> getAtom <span class="st">&quot;_NET_ACTIVE_WINDOW&quot;</span>
@@ -73,7 +275,7 @@ myEwmhDesktopsEventHook e<span class="fu">@</span>(<span class="dt">ClientMessag
        <span class="fu">&amp;&amp;</span> curTime <span class="ot">`diffUTCTime`</span> starupTime <span class="fu">&lt;=</span> <span class="fl">5.0</span>
        <span class="kw">then</span> return (<span class="dt">All</span> <span class="dt">True</span>)
        <span class="kw">else</span> ewmhDesktopsEventHook e
-myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</code></pre>
+myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</code></pre></div>
 <p>Now you might recompile xmonad and enjoy the change.</p>
 <h1 id="resources">Resources</h1>
 <p><strong>About my config</strong></p>
@@ -85,6 +287,7 @@ myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</cod
 ]]></description>
     <pubDate>Thu, 27 Nov 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-11-27-get-rid-of-xmonad-focus-thief.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Comonad, Zipper and Conway's Game of Life (Part 2)</title>
@@ -127,7 +330,7 @@ myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</cod
 ...</code></pre>
 <h1 id="propagation-rules">Propagation Rules</h1>
 <p>I believe it's easy to see the pattern. And you can write a function to describe the rule. At the first glance you might think the state of a fixed position in the “world” only depends on its previous state and the previous states of its neighborhoods. But it turns out the previous state of itself isn't necessary, but we just leave it as an argument (Simply because I think it looks better).</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
 waveRule _ l r
     <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">&#39;X&#39;</span>
     <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">&#39;&gt;&#39;</span>
@@ -135,7 +338,7 @@ waveRule _ l r
     <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">&#39; &#39;</span>
     <span class="kw">where</span>
         fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
-        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></code></pre>
+        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></code></pre></div>
 <h1 id="first-solution">First Solution</h1>
 <p>(This part is not about zippers or comonads, feel free to skip it) It is not hard to come up with a solution involving only basic list manipulations. I think it would be a good exercise. My solution can be found <a href="https://gist.github.com/Javran/eed695b4f837cc8ea214">here</a>.</p>
 <p>The output should be:</p>
@@ -218,14 +421,14 @@ waveRule _ l r
 <h1 id="implementation">Implementation</h1>
 <h2 id="zippers">Zippers</h2>
 <p>First let's begin with zipper implementations. Since the world can never be empty, it is totally safe to break the focusing data (<code>[a]</code>) into its components (<code>(a,[a])</code>). By rearranging the order of arguments (<code>([a],[a])</code> … <code>([a],(a,[a]))</code> … <code>LZipper a [a] [a]</code>) we have our final version of <code>LZipper</code> here:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span>
 
 <span class="co">-- | LZipper &lt;current&gt; &lt;left (reversed)&gt; &lt;right&gt;</span>
 <span class="kw">data</span> <span class="dt">LZipper</span> a <span class="fu">=</span> <span class="dt">LZipper</span> a [a] [a]
-    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</code></pre>
+    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</code></pre></div>
 <p>Here the old focus would be <code>&lt;current&gt;:&lt;right&gt;</code> but we can break the focusing list to make it looks nicer: now a list zipper in our case consists of three parts, a current focus <code>&lt;current&gt;</code>, everything to the left of it <code>&lt;left (reversed)&gt;</code> and everything to the right of it <code>&lt;right&gt;</code>.</p>
 <p>With the list zipper definition given, it's easy to define basic operations:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | shift left and right</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | shift left and right</span>
 zipperMoveL,<span class="ot"> zipperMoveR ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
 zipperMoveL (<span class="dt">LZipper</span> a (x<span class="fu">:</span>xs&#39;) ys) <span class="fu">=</span> <span class="dt">LZipper</span> x xs&#39; (a<span class="fu">:</span>ys)
 zipperMoveL _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
@@ -234,18 +437,18 @@ zipperMoveR _ <span class="fu">=</span> error <span class="st">&quot;Invalid mov
 
 <span class="co">-- | get the current focusing element</span>
 <span class="ot">current ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> a
-current (<span class="dt">LZipper</span> v _ _) <span class="fu">=</span> v</code></pre>
+current (<span class="dt">LZipper</span> v _ _) <span class="fu">=</span> v</code></pre></div>
 <h2 id="conversion-between-limited-worlds-and-infinite-worlds">Conversion between Limited Worlds and Infinite Worlds</h2>
 <p>To initialize the world we need to convert from a list of cells to a zipper which represents the infinite world. This can be achieved by padding the list to make it infinite in both directions:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | initial world to a zipper</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | initial world to a zipper</span>
 <span class="ot">rangeToZipper ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
 rangeToZipper v wd <span class="fu">=</span> <span class="kw">case</span> wd <span class="kw">of</span>
     []   <span class="ot">-&gt;</span> <span class="dt">LZipper</span> v pad pad
     x<span class="fu">:</span>xs <span class="ot">-&gt;</span> <span class="dt">LZipper</span> x pad (xs <span class="fu">++</span> pad)
     <span class="kw">where</span>
-        pad <span class="fu">=</span> repeat v</code></pre>
+        pad <span class="fu">=</span> repeat v</code></pre></div>
 <p>And to view a portion of the infinite world, we take as argument two coordinates and a zipper (the zipper is assumed to point to the origin point), move the zipper to the position specified by one of the coordinate, and then extract the value of the focus from zipper and keep moving the zipper to the other coordinate.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span>
 <span class="ot">zipperToRange ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> [a]
 zipperToRange (i,j) zp <span class="fu">=</span> fmap current zippers
     <span class="kw">where</span>
@@ -255,10 +458,10 @@ zipperToRange (i,j) zp <span class="fu">=</span> fmap current zippers
         zipperMoveFocus t z
             <span class="fu">|</span> t <span class="fu">&gt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">-</span><span class="dv">1</span>) (zipperMoveR z)
             <span class="fu">|</span> t <span class="fu">&lt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">+</span><span class="dv">1</span>) (zipperMoveL z)
-            <span class="fu">|</span> otherwise <span class="fu">=</span> z</code></pre>
+            <span class="fu">|</span> otherwise <span class="fu">=</span> z</code></pre></div>
 <h2 id="propagation-rules-1">Propagation Rules</h2>
 <p>We modify <code>waveRule</code> function above so that it can produce the next cell state from a zipper. The nice thing about our zipper is that both of the neighboring old cell states can be easily found by pattern matching on arguments.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
 waveRule (<span class="dt">LZipper</span> _ (l<span class="fu">:</span>_) (r<span class="fu">:</span>_))
     <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">&#39;X&#39;</span>
     <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">&#39;&gt;&#39;</span>
@@ -267,64 +470,64 @@ waveRule (<span class="dt">LZipper</span> _ (l<span class="fu">:</span>_) (r<spa
     <span class="kw">where</span>
         fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
         fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span>
-waveRule _ <span class="fu">=</span> error <span class="st">&quot;null zipper&quot;</span></code></pre>
+waveRule _ <span class="fu">=</span> error <span class="st">&quot;null zipper&quot;</span></code></pre></div>
 <p>And then we rush to complete the main function, assuming <code>nextGen :: LZipper Char -&gt; LZipper Char</code>, a function that takes a zipper and produces a zipper of the next generation. has been implemented for us.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen <span class="fu">=</span> undefined
 
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> mapM_ (putStrLn <span class="fu">.</span> zipperToRange (<span class="fu">-</span><span class="dv">20</span>,<span class="dv">40</span>)) (take <span class="dv">20</span> (iterate nextGen startZ))
     <span class="kw">where</span>
         startStr <span class="fu">=</span> <span class="st">&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</span>
-        startZ <span class="fu">=</span> rangeToZipper <span class="ch">&#39; &#39;</span> startStr</code></pre>
+        startZ <span class="fu">=</span> rangeToZipper <span class="ch">&#39; &#39;</span> startStr</code></pre></div>
 <p>In the code above, we take 20 generations, view the world within range <code>(-20,40)</code>.</p>
 <h2 id="the-final-missing-piece">The Final Missing Piece</h2>
 <p>The only thing missing in our implementation is the <code>nextGen</code> function, this is also where the magic happens. Let's implement it step by step.</p>
 <p>By taking its type signature into account, we can write down the shape of the body:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> undefined
         ls&#39; <span class="fu">=</span> undefined
-        rs&#39; <span class="fu">=</span> undefined</code></pre>
+        rs&#39; <span class="fu">=</span> undefined</code></pre></div>
 <p>And it's not hard to figure out what is <code>c'</code> – the new cell state in correspondence with <code>c</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> waveRule z
         ls&#39; <span class="fu">=</span> undefined
-        rs&#39; <span class="fu">=</span> undefined</code></pre>
+        rs&#39; <span class="fu">=</span> undefined</code></pre></div>
 <p>To figure out <code>ls'</code>, we first try to figure out the first element of it, namely <code>l'</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> waveRule z
         l&#39; <span class="fu">=</span> undefined
         ls&#39; <span class="fu">=</span> l&#39; <span class="fu">:</span> undefined
-        rs&#39; <span class="fu">=</span> undefined</code></pre>
+        rs&#39; <span class="fu">=</span> undefined</code></pre></div>
 <p>Since the focus of <code>l'</code> is the direct neighborhood of <code>c</code>, we can simply move the zipper to calculate its new state:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> waveRule z
         l&#39; <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
         ls&#39; <span class="fu">=</span> l&#39; <span class="fu">:</span> undefined
-        rs&#39; <span class="fu">=</span> undefined</code></pre>
+        rs&#39; <span class="fu">=</span> undefined</code></pre></div>
 <p>Comparing <code>c'</code> and <code>l'</code>, we can find the pattern:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> waveRule z
         l&#39; <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
         ls&#39; <span class="fu">=</span> [waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, waveRule <span class="fu">.</span> zipperMoveL <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, <span class="fu">...</span>]
-        rs&#39; <span class="fu">=</span> undefined</code></pre>
+        rs&#39; <span class="fu">=</span> undefined</code></pre></div>
 <p>And the same pattern holds for <code>rs'</code>: we just keep moving the zipper to its left or right, and produce new states by applying <code>waveRule</code> to it. So we end up with:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
 nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#39; rs&#39;
     <span class="kw">where</span>
         c&#39; <span class="fu">=</span> waveRule z
         ls&#39; <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveL z
-        rs&#39; <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveR z</code></pre>
+        rs&#39; <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveR z</code></pre></div>
 <p>Now the whole program should be complete, if you run it, you will get something like this:</p>
 <pre><code>                    *  &gt;  *   *  &lt;  **&lt;                      
                    &lt; &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;                      
@@ -357,6 +560,7 @@ nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#3
 ]]></description>
     <pubDate>Fri, 22 Aug 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-08-22-comonad-zipper-and-conways-game-of-life.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Comonad, Zipper and Conway's Game of Life (Part 1)</title>
@@ -383,38 +587,38 @@ nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c&#39; ls&#3
 <p>Looking at these rules, you will find that the next state of a given cell in the world is merely determined by the previous states of itself and its neighborhoods. So I feel Game of Life would be a perfect example for comonad.</p>
 <h1 id="comonad">Comonad</h1>
 <p>Recall what is a monad in Haskell code:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Functor</span> m <span class="ot">=&gt;</span> <span class="dt">Monad</span> m <span class="kw">where</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Functor</span> m <span class="ot">=&gt;</span> <span class="dt">Monad</span> m <span class="kw">where</span>
 <span class="ot">    return ::</span> a <span class="ot">-&gt;</span> m a
-<span class="ot">    join   ::</span> m (m a) <span class="ot">-&gt;</span> m a</code></pre>
+<span class="ot">    join   ::</span> m (m a) <span class="ot">-&gt;</span> m a</code></pre></div>
 <p>I lied here because to define a <code>Monad</code>, Haskell does not require you to make it an instance of <code>Functor</code> at the first place. But trust me <a href="http://www.haskell.org/haskellwiki/Functor-Applicative-Monad_Proposal">this requirement will be forced in future</a>.</p>
 <p>In addition, I don't define a <code>(&gt;&gt;=)</code> but instead a <code>join</code>, since <code>f &gt;&gt;= m = join (fmap f m)</code>, and <code>m</code> should also be an instance of <code>Functor</code>, this monad definition should be almost equivalent to the one found in the base library.</p>
 <p>Whenever we “co-” something, it means to filp every <code>-&gt;</code> into <code>&lt;-</code>. So we know what a comonad would look like:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Functor</span> w <span class="ot">=&gt;</span> <span class="dt">Comonad</span> w <span class="kw">where</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Functor</span> w <span class="ot">=&gt;</span> <span class="dt">Comonad</span> w <span class="kw">where</span>
 <span class="ot">    extract   ::</span> w a <span class="ot">-&gt;</span> a
 <span class="ot">    duplicate ::</span> w a <span class="ot">-&gt;</span> w (w a)
 
 <span class="ot">    extend    ::</span> (w a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> w a <span class="ot">-&gt;</span> w b
-<span class="ot">    (=&gt;&gt;)     ::</span> w a <span class="ot">-&gt;</span> (w a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> w b</code></pre>
+<span class="ot">    (=&gt;&gt;)     ::</span> w a <span class="ot">-&gt;</span> (w a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> w b</code></pre></div>
 <p>Here you can see we flip the type signature for <code>return</code> and <code>join</code>, we get <code>extract</code> and <code>duplicate</code> as results. It's also handy to have <code>extend</code> and <code>(=&gt;&gt;)</code>, which can all be defined in terms of <code>fmap</code> and <code>duplicate</code>, just like <code>(=&lt;&lt;)</code> and <code>(&gt;&gt;=)</code> functions for monad. Let's try to figure out the implementation of <code>extend</code>.</p>
 <p>The first step is to bind the arguments of <code>extend</code> to some name (here <code>f</code> and <code>w1</code>), so we can list all the tools available:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">extract    ::</span> forall a   <span class="fu">.</span> w a <span class="ot">-&gt;</span> a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">extract    ::</span> forall a   <span class="fu">.</span> w a <span class="ot">-&gt;</span> a
 <span class="ot">duplicate  ::</span> forall a   <span class="fu">.</span> w a <span class="ot">-&gt;</span> w (w a)
 fmap<span class="ot">       ::</span> forall a b <span class="fu">.</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> w a <span class="ot">-&gt;</span> w b
 <span class="ot">f          ::</span> w a <span class="ot">-&gt;</span> b
 <span class="ot">w1         ::</span> w a
 <span class="co">-- goal:</span>
-extend f<span class="ot"> w ::</span> w b</code></pre>
+extend f<span class="ot"> w ::</span> w b</code></pre></div>
 <p>It's tempting to try <code>f w1 :: b</code>, but it is a dead end. Instead, because <code>f</code> “removes a layer of w”, we can try to add another layer before using <code>f</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">duplicate<span class="ot"> w1          ::</span> w (w a)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">duplicate<span class="ot"> w1          ::</span> w (w a)
 fmap<span class="ot">                  ::</span> (a&#39; <span class="ot">-&gt;</span> b&#39;) <span class="ot">-&gt;</span> w a&#39; <span class="ot">-&gt;</span> w b&#39;
 <span class="co">-- where a&#39; = w a, b&#39; = b</span>
-fmap f (duplicate w1)<span class="ot"> ::</span> w b</code></pre>
+fmap f (duplicate w1)<span class="ot"> ::</span> w b</code></pre></div>
 <p>Therefore:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">extend f w <span class="fu">=</span> fmap f (duplicate w)
-w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu">=</span> extend f w</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">extend f w <span class="fu">=</span> fmap f (duplicate w)
+w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu">=</span> extend f w</code></pre></div>
 <p>or more point-freely:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">extend f <span class="fu">=</span> fmap f <span class="fu">.</span> duplicate
-(<span class="ot">=&gt;</span><span class="fu">&gt;</span>)    <span class="fu">=</span> flip extend</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">extend f <span class="fu">=</span> fmap f <span class="fu">.</span> duplicate
+(<span class="ot">=&gt;</span><span class="fu">&gt;</span>)    <span class="fu">=</span> flip extend</code></pre></div>
 <h1 id="some-understanding-about-comonad">Some understanding about comonad</h1>
 <p>In my opinion, when trying to understand monad, it's more straightforward to begin with understanding <code>fmap</code>, <code>return</code> and <code>join</code>, but in practice, <code>&gt;&gt;=</code> and <code>=&lt;&lt;</code> come in handy. And the same thing happens to comonad: <code>extract</code> and <code>duplicate</code> are easy, and <code>extend</code> and <code>=&gt;&gt;</code> come in handy.</p>
 <p>Recall that in the intro section, I said comonad deals with data context. More precisely, (IMHO) it's a type constructor that adds to a data structure the ability of focusing on one particular value and the ability of moving focus.</p>
@@ -434,6 +638,7 @@ w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu
 ]]></description>
     <pubDate>Sun, 13 Apr 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-04-13-comonad-and-conways-game-of-life.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Start working on exercism</title>
@@ -461,6 +666,7 @@ w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu
 ]]></description>
     <pubDate>Sun, 06 Apr 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-04-06-start-working-on-exercism.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Implement semantic editor combinators</title>
@@ -491,19 +697,19 @@ w <span class="ot">=&gt;</span><span class="fu">&gt;</span> f    <span class="fu
 <li><p>For <code>second</code>, we want type <code>d = a</code>, and the return value should be of type <code>(c,b)</code></p></li>
 </ul>
 <p>Put them together, we end up with type signature for <code>first</code> and <code>second</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
-<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
+<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</code></pre></div>
 <p>Introduce <code>f</code> and <code>(x,y)</code> for two arguments, and the implementation is straightforward:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
 first  f (x,y) <span class="fu">=</span> (f x, y)
 
 <span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)
-second f (x,y) <span class="fu">=</span> (x, f y)</code></pre>
+second f (x,y) <span class="fu">=</span> (x, f y)</code></pre></div>
 <p>Let's bring up GHCi for some tests:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
 (<span class="dv">1</span>,<span class="st">&quot;bar&quot;</span>)
 λ<span class="fu">&gt;</span> second (<span class="fu">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span>
-(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre>
+(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre></div>
 <h1 id="editing-a-function">Editing a function</h1>
 <p>There's two way of editing a function: we can either modify the return value (the <code>result</code> combinator), or modify the argument (the <code>argument</code> combinator).</p>
 <h2 id="the-result-combinator">the <code>result</code> combinator</h2>
@@ -514,27 +720,27 @@ second f (x,y) <span class="fu">=</span> (x, f y)</code></pre>
 <li>We want to modify on the return value of <code>g</code>, therefore <code>d = a</code>.</li>
 <li>Then the resulting function should be of type <code>c -&gt; b</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</code></pre></div>
 <p>We know that <code>-&gt;</code> is right-associative, (e.g. <code>p -&gt; q -&gt; r</code> and <code>p -&gt; (q -&gt; r)</code> are equivalent) so we can also think <code>result</code> as a function that accepts 3 arguments, and its type signature becomes:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</code></pre></div>
 <p>Introduce <code>f</code> <code>g</code> <code>x</code> for these 3 arguments, and we want a value of type <code>b</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> undefined</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result f g x <span class="fu">=</span> undefined</code></pre></div>
 <ul>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li>To produce a value of <code>a</code>, we might need <code>g :: c -&gt; a</code>.</li>
 <li><code>x</code> is of type <code>c</code></li>
 </ul>
 <p>Chaining these facts together, we yield the implementation of <code>result</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> f (g x)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result f g x <span class="fu">=</span> f (g x)</code></pre></div>
 <p>This is exactly the definition of <a href="http://hackage.haskell.org/package/base-4.6.0.1/docs/src/GHC-Base.html#."><code>(.)</code></a>, function composition.</p>
 <p>So we end up with:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre></div>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
-<span class="dv">7</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
+<span class="dv">7</span></code></pre></div>
 <h2 id="the-argument-combinator">the <code>argument</code> combinator</h2>
 <p>Use the same approach, let’s implement <code>argument</code> combinator:</p>
 <ul>
@@ -544,16 +750,16 @@ result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre>
 <li>the resulting function should be of type <code>a -&gt; d</code>.</li>
 </ul>
 <p>Write down the type signature, introduce <code>f</code>, <code>g</code>, <code>x</code>, the goal is to produce a value of type <code>d</code></p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> undefined</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+argument f g x <span class="fu">=</span> undefined</code></pre></div>
 <ul>
 <li>To produce a value of <code>d</code>, we might need <code>g :: b -&gt; d</code>.</li>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li><code>x</code> is of type <code>a</code></li>
 </ul>
 <p>Therefore the definition of <code>argument</code> is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> g (f x)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+argument f g x <span class="fu">=</span> g (f x)</code></pre></div>
 <p>To simplify this, we do some transformations:</p>
 <pre><code>  g (f x)
 &gt; (g . f) x           -- definition of (.)
@@ -562,12 +768,12 @@ argument f g x <span class="fu">=</span> g (f x)</code></pre>
 &gt; ((flip (.)) f g) x  -- flip
 &gt; flip (.) f g x      -- rule of function application</code></pre>
 <p>Finally:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
 <span class="co">-- point-free style of: argument f g x = flip (.) f g x</span>
-argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
+argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre></div>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
-<span class="st">&quot;2048!&quot;</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
+<span class="st">&quot;2048!&quot;</span></code></pre></div>
 <h1 id="walking-into-data">Walking into data</h1>
 <p>For now we have <code>first</code> and <code>second</code> to work with pairs, and <code>argument</code> and <code>result</code> with functions, but sometimes we want to go deeper inside data, say:</p>
 <ul>
@@ -577,23 +783,23 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>Here I try to give some explanation of how to do this.</p>
 <h2 id="goal-1">Goal 1</h2>
 <p>To modify <code>d</code> in <code>(a,(c,d))</code>, that means we need to first focus on <code>(c,d)</code>, this can be achieved by <code>second</code>, let’s pass a const function <code>const &quot;Focus&quot;</code> to <code>second</code>, so we know we are focusing on which portion of the data:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
 λ<span class="fu">&gt;</span> <span class="kw">let</span> toFocus <span class="fu">=</span> const <span class="st">&quot;Focus&quot;</span>
 λ<span class="fu">&gt;</span> second toFocus d1
-(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre>
+(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre></div>
 <p>We now know that missing <code>(2,1)</code> is passed to <code>toFocus</code>, we can use a lambda expression to capture it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
-(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
+(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre></div>
 <p>Let's do something more interesting:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
-(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
+(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre></div>
 <p>The observation is: inside the body of lambda expression <code>\x -&gt; ...</code>, we can do something to <code>(2,1)</code>. That means we can apply semantic editor combinators on it!</p>
 <p>Now assume we are dealing with <code>(2,1)</code>, to reach the goal, we apply <code>const 5</code> to its <code>fst</code> part:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
-(<span class="dv">5</span>,<span class="dv">1</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
+(<span class="dv">5</span>,<span class="dv">1</span>)</code></pre></div>
 <p>Now replace the body of <code>\x -&gt; ...</code> with what we want:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
-(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
+(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre></div>
 <p>Done!</p>
 <h2 id="some-intuition">Some intuition</h2>
 <p>Let's not hurry to Goal 2, I’ll show you some transformations:</p>
@@ -605,17 +811,17 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>It might not be straightforward at first glance, since function composition is usually “right to left”, that is, <code>(g . f)</code> means “first apply <code>f</code>, on its result, apply <code>g</code>. But here, <code>second . first</code> can be read as”walk to the <code>snd</code> part, and then <code>fst</code> part of it“.</p>
 <p>My explanation is: <strong>the function does compose from right to left, but what’s “carrying” with the composition is not the data</strong>.</p>
 <p>The observation is: no matter how many functions are composed together, the resulting function just takes one argument:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u
 u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
 u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
-u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre>
+u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre></div>
 <p>So what is the argument taken by this resulting function? In our Goal 1, it is <code>const 5</code>, the “how we modify it” part. So despite that <code>(second . first) (const 5) d1</code> is simple, to understand it, what you really need would be: <code>((second . first) (const 5)) d1</code></p>
 <p>The observation is: <strong>functions are composed from right to left and the mutator is buried more deeply as the composition goes</strong>.</p>
 <p>To see this, let's just pick up combinators randomly to form a chain of function composition, and check its type:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
 first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (a, d) <span class="ot">-&gt;</span> (b, d)
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (second <span class="fu">.</span> first) (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, (a, d)) <span class="ot">-&gt;</span> (c, (b, d))
@@ -628,7 +834,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 <span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span>
-     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre>
+     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre></div>
 <p>Reading the composition from right to left, <strong>we are constructing / definiting the “shape” of the data this combinator would like to work on</strong>. In contrast, reading from left to right, <strong>we are deconstructing the data until we reach for the position that we want to modify</strong>. These two views does not conflict with each other.</p>
 <p>Therefore, IMHO, when we are thinking about how to walking into the interesting portion, it's helpful thinking about build up combinator from left to right. But to answer the question about why, we should instead read from right to left.</p>
 <p>In addition, here is another interesting observation:</p>
@@ -647,7 +853,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>apply <code>(* 2)</code></li>
 </ul>
 <p>Try it out:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
 λ<span class="fu">&gt;</span> <span class="kw">let</span> m2 <span class="fu">=</span> (result <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> first) (<span class="fu">*</span><span class="dv">2</span>) d2
 λ<span class="fu">&gt;</span> (snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>
 (<span class="dv">30</span>,<span class="dv">1</span>)
@@ -660,7 +866,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) d2
 <span class="dv">30</span>
 λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) m2
-<span class="dv">60</span></code></pre>
+<span class="dv">60</span></code></pre></div>
 <p>Last two programs are just rewriting the two programs right before it, Do you notice the symmetry between <code>fst . ($ 20) . snd . ($ 10)</code> and <code>result . second . result . first</code>?</p>
 <p>I believe this is not an accident, but to explain it might beyond my reach, this is what I have for now:</p>
 <p>With the help of <a href="http://www.haskell.org/haskellwiki/Lambdabot">Lambdabot</a>:</p>
@@ -676,8 +882,8 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>resulting data: <code>[b]</code></li>
 </ul>
 <p>and this is exactly <code>map</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
-element <span class="fu">=</span> map</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+element <span class="fu">=</span> map</code></pre></div>
 <p>Here I show you 3 extra combinators:</p>
 <p><em>inHead</em> modifies the head of a list:</p>
 <ul>
@@ -685,18 +891,18 @@ element <span class="fu">=</span> map</code></pre>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inHead f [] <span class="fu">=</span> []
-inHead f (x<span class="fu">:</span>xs) <span class="fu">=</span> f x <span class="fu">:</span> xs</code></pre>
+inHead f (x<span class="fu">:</span>xs) <span class="fu">=</span> f x <span class="fu">:</span> xs</code></pre></div>
 <p><em>inTail</em> modifies the tail of a list:</p>
 <ul>
 <li>how to modify: <code>f :: [a] -&gt; [a]</code></li>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inTail f [] <span class="fu">=</span> []
-inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class="fu">:</span> f xs</code></pre>
+inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class="fu">:</span> f xs</code></pre></div>
 <p><em>inPos</em> modifies the element at a given position:</p>
 <ul>
 <li>we first need the position: <code>Int</code></li>
@@ -704,14 +910,14 @@ inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class=
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inPos n f xs
       <span class="fu">|</span> null xs    <span class="fu">=</span> xs
       <span class="fu">|</span> n <span class="fu">&lt;</span> <span class="dv">0</span>      <span class="fu">=</span> xs
       <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">0</span>     <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
                      <span class="kw">in</span> f y <span class="fu">:</span> ys
       <span class="fu">|</span> otherwise  <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
-                     <span class="kw">in</span> y <span class="fu">:</span> inPos (n <span class="fu">-</span> <span class="dv">1</span>) f ys</code></pre>
+                     <span class="kw">in</span> y <span class="fu">:</span> inPos (n <span class="fu">-</span> <span class="dv">1</span>) f ys</code></pre></div>
 <p><em>inSome</em> is like <code>inPos</code>, but modifies multiple positions:</p>
 <ul>
 <li>we first need the indices: <code>[Int]</code></li>
@@ -719,10 +925,10 @@ inPos n f xs
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre></div>
 <p>Some examples:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
 λ<span class="fu">&gt;</span> (second <span class="fu">.</span> element) (<span class="fu">+</span> <span class="dv">1</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>])
 λ<span class="fu">&gt;</span> (first <span class="fu">.</span> element) ord d1
@@ -735,14 +941,14 @@ inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">800</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
 λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> replicate <span class="dv">3</span> (replicate <span class="dv">4</span> <span class="dv">0</span>)
 λ<span class="fu">&gt;</span> (inPos <span class="dv">1</span> <span class="fu">.</span> inPos <span class="dv">2</span>) (const <span class="dv">255</span>) d2
-[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre>
+[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre></div>
 <h1 id="walking-into-user-defined-data">Walking into user defined data</h1>
 <p>Suppose user has defined a binary tree:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="fu">=</span> <span class="dt">Node</span> a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="fu">=</span> <span class="dt">Node</span> a
                <span class="fu">|</span> <span class="dt">Tree</span> (<span class="dt">BinTree</span> a) (<span class="dt">BinTree</span> a) a
-                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</code></pre>
+                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</code></pre></div>
 <p>To write a combinator is easy, just follow the pattern <code>&lt;combinator&gt; &lt;mutator&gt; &lt;data&gt; = &lt;modified-data&gt;</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
 treeV f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
 treeV f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> l r (f x)
 
@@ -763,12 +969,12 @@ treeNonLeaf f r <span class="fu">=</span> r
 
 <span class="ot">treeLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
 treeLeaf f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
-treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</code></pre>
+treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</code></pre></div>
 <p>Here <code>treeElement</code> walks into the data part of each node to do the modification. Since <code>treeElement = fmap</code>, we can generalize <code>element = fmap</code>, to make it work for not only lists and <code>BinTree</code>s, but also any other Functors.</p>
 <p><code>treeLeft</code> and <code>treeRight</code> walks into left subtree and right subtree, respectively. But to target at the value of a <code>BinTree</code>, we need <code>treeV</code>, which takes care of walking into the data field of a tree.</p>
 <p><code>treeNonLeaf</code> and <code>treeLeaf</code> are just like <code>treeElement</code> but works merely on non-leaf nodes and leaf nodes, respectively.</p>
 <p>See them in action:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeElement <span class="fu">.</span> first) even d1 <span class="co">-- test for each node, if the `fst` part is an even?</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">2</span>)) (<span class="dt">True</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">4</span>)) (<span class="dt">False</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span>
@@ -778,38 +984,39 @@ treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span 
 λ<span class="fu">&gt;</span> (treeNonLeaf <span class="fu">.</span> first) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">100</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">100</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeLeaf <span class="fu">.</span> second) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre>
+<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre></div>
 <h1 id="combining-semantic-editor-combinators">Combining semantic editor combinators</h1>
 <p>The semantic editor combinators can also be chained together.</p>
 <p>Suppose we have some combinators:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
 λ<span class="fu">&gt;</span> <span class="kw">let</span> c05 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">5</span>)
 λ<span class="fu">&gt;</span> <span class="kw">let</span> c06 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">6</span>)
-λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre>
+λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre></div>
 <p>For a given list, we want to apply <code>c13</code> and <code>c05</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
 λ<span class="fu">&gt;</span> c06 (c13 d)
 [<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]
 λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c13) d
-[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre>
+[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre></div>
 <p>So we can use function composition to compose semantic editors:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13)) d2
 (<span class="dv">1</span>,[<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13) <span class="fu">.</span> (second c05)) d2
 (<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second (c13 <span class="fu">.</span> c05))) d2
-(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre>
+(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre></div>
 <p>The last example says “apply <code>1</code>, (back to the top level and then) walk into the <code>snd</code> part, apply <code>c05</code> and then <code>c13</code>”. I think this “distributive property” will make things extremely flexible.</p>
 <p>Since the function composition happens from right to left, if some combinators are trying to modify the same field, the “leftmost” one take effect:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
 [<span class="dv">5</span>,<span class="dv">1</span>]
 λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]
-[<span class="dv">6</span>,<span class="dv">1</span>]</code></pre>
+[<span class="dv">6</span>,<span class="dv">1</span>]</code></pre></div>
 </div>
 ]]></description>
     <pubDate>Fri, 21 Mar 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-03-21-implement-semantic-editor-combinators.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Capture the notion of invertible functions</title>
@@ -842,7 +1049,7 @@ treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span 
     }</code></pre>
 <p><code>into</code> means “convert a into b” while <code>back</code> means “convert b back to a”.</p>
 <p>And then few helper functions:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selfInv ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">Invertible</span> a a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selfInv ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">Invertible</span> a a
 selfInv f <span class="fu">=</span> <span class="dt">Invertible</span> f f
 
 <span class="ot">flipInv ::</span> <span class="dt">Invertible</span> a b <span class="ot">-&gt;</span> <span class="dt">Invertible</span> b a
@@ -852,25 +1059,25 @@ flipInv (<span class="dt">Invertible</span> f g) <span class="fu">=</span> <span
 borrow (<span class="dt">Invertible</span> fIn fOut) g <span class="fu">=</span> fOut <span class="fu">.</span> g <span class="fu">.</span> fIn
 
 <span class="ot">liftInv ::</span> (<span class="dt">Functor</span> f) <span class="ot">=&gt;</span> <span class="dt">Invertible</span> a b <span class="ot">-&gt;</span> <span class="dt">Invertible</span> (f a) (f b)
-liftInv (<span class="dt">Invertible</span> a b) <span class="fu">=</span> <span class="dt">Invertible</span> (fmap a) (fmap b)</code></pre>
+liftInv (<span class="dt">Invertible</span> a b) <span class="fu">=</span> <span class="dt">Invertible</span> (fmap a) (fmap b)</code></pre></div>
 <p>In the above code <code>borrow</code> will use the pair of functions to make its last argument <code>g</code> available to values of type <code>a</code>. And changing <code>borrow f</code> to <code>borrow (flipInv f)</code> will make <code>g</code> available to values of type <code>b</code>. Therefore <code>borrow</code> captures my initial idea of making a function of type <code>b -&gt; b</code> available for values of <code>a</code> if <code>a</code> and <code>b</code> can be converted to each other.</p>
 <p>In addition, <code>Invertible</code> forms a monoid-like structure, I use <code>rappend</code> and <code>rempty</code> to suggest a similiarity between it and <code>Monoid</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">rempty ::</span> <span class="dt">Invertible</span> a a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">rempty ::</span> <span class="dt">Invertible</span> a a
 rempty <span class="fu">=</span> selfInv id
 
 <span class="ot">rappend ::</span> <span class="dt">Invertible</span> a b
         <span class="ot">-&gt;</span> <span class="dt">Invertible</span> b c
         <span class="ot">-&gt;</span> <span class="dt">Invertible</span> a c
 (<span class="dt">Invertible</span> f1 g1) <span class="ot">`rappend`</span> (<span class="dt">Invertible</span> f2 g2) <span class="fu">=</span>
-    <span class="dt">Invertible</span> (f2 <span class="fu">.</span> f1) (g1 <span class="fu">.</span> g2)</code></pre>
+    <span class="dt">Invertible</span> (f2 <span class="fu">.</span> f1) (g1 <span class="fu">.</span> g2)</code></pre></div>
 <h1 id="examples">Examples</h1>
 <p>Here I have two examples to demonstrate that <code>Invertible</code> might be useful.</p>
 <h2 id="data-encryption">Data Encryption</h2>
 <p>It is natural that <code>Invertible</code> can be used under scenario of symmetric encryption. <code>Invertible (encrypt key) (decrypt key)</code> might be one instance if:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">encrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span>
-<span class="ot">decrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">encrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span>
+<span class="ot">decrypt ::</span> <span class="dt">Key</span> <span class="ot">-&gt;</span> <span class="dt">CipherText</span> <span class="ot">-&gt;</span> <span class="dt">PlainText</span></code></pre></div>
 <p>To simplify a little, I make an example of <a href="https://en.wikipedia.org/wiki/Caesar_Cipher">Caesar cipher</a> and assume that plain text contains only uppercase letters:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- constructor should be invisible from outside</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- constructor should be invisible from outside</span>
 <span class="kw">newtype</span> <span class="dt">OnlyUpper</span> a <span class="fu">=</span> <span class="dt">OnlyUpper</span>
     {<span class="ot"> getOU ::</span> [a]
     } <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>, <span class="dt">Functor</span>)
@@ -885,9 +1092,9 @@ onlyUpper <span class="fu">=</span> <span class="dt">OnlyUpper</span> <span clas
 upperAsOrd <span class="fu">=</span> <span class="dt">Invertible</span> ord&#39; chr&#39;
     <span class="kw">where</span>
         ord&#39; x <span class="fu">=</span> ord x <span class="fu">-</span> ord <span class="ch">&#39;A&#39;</span>
-        chr&#39; x <span class="fu">=</span> chr (x <span class="fu">+</span> ord <span class="ch">&#39;A&#39;</span>)</code></pre>
+        chr&#39; x <span class="fu">=</span> chr (x <span class="fu">+</span> ord <span class="ch">&#39;A&#39;</span>)</code></pre></div>
 <p>And Caesar Cipher is basically doing some modular arithmetic:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">modShift ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Invertible</span> <span class="dt">Int</span> <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">modShift ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Invertible</span> <span class="dt">Int</span> <span class="dt">Int</span>
 modShift base offset <span class="fu">=</span> <span class="dt">Invertible</span> f g
     <span class="kw">where</span>
         f x <span class="fu">=</span> (x <span class="fu">+</span> offset) <span class="ot">`mod`</span> base
@@ -902,9 +1109,9 @@ caesarCipher <span class="fu">=</span> liftInv (upperAsOrd
                        <span class="ot">`rappend`</span> caesarShift
                        <span class="co">-- Int &lt;-&gt; Int</span>
                        <span class="ot">`rappend`</span> flipInv upperAsOrd)
-                       <span class="co">-- Int &lt;-&gt; Char</span></code></pre>
+                       <span class="co">-- Int &lt;-&gt; Char</span></code></pre></div>
 <p>One way to use <code>Invertible</code> is just using its <code>into</code> and <code>back</code> as <code>encrypt</code> and <code>decrypt</code>, and <code>Invertible</code> also gives you the power of manipulating encrypyed data as if it was plain text:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">exampleCaesar ::</span> <span class="dt">IO</span> ()
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">exampleCaesar ::</span> <span class="dt">IO</span> ()
 exampleCaesar <span class="fu">=</span> <span class="kw">do</span>
     <span class="kw">let</span> encF <span class="fu">=</span> into caesarCipher
         decF <span class="fu">=</span> back caesarCipher
@@ -922,15 +1129,15 @@ exampleCaesar <span class="fu">=</span> <span class="kw">do</span>
     print encrypted&#39;
     <span class="co">-- OnlyUpper {getOU = &quot;XLIUYMGOFVSARJSBNYQTWSZIVXLIPEDCHSK&quot;}</span>
     print decrypted&#39;
-    <span class="co">-- OnlyUpper {getOU = &quot;THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG&quot;}</span></code></pre>
+    <span class="co">-- OnlyUpper {getOU = &quot;THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG&quot;}</span></code></pre></div>
 <h2 id="matrix-manipulation">Matrix manipulation</h2>
 <p>Sometimes it’s convenient to write some code that manipulates matrices using <code>Invertible</code>.</p>
 <p>Say there is a list of type <code>[Int]</code> in which <code>0</code> stands for an empty cell, and we want every non-zero element move to their leftmost possible position while preserving the order:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">compactLeft ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">compactLeft ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
 compactLeft xs <span class="fu">=</span> nonZeros <span class="fu">++</span> replicate (((<span class="fu">-</span>) <span class="ot">`on`</span> length) xs nonZeros) <span class="dv">0</span>
-    <span class="kw">where</span> nonZeros <span class="fu">=</span> filter (<span class="fu">/=</span> <span class="dv">0</span>) xs</code></pre>
+    <span class="kw">where</span> nonZeros <span class="fu">=</span> filter (<span class="fu">/=</span> <span class="dv">0</span>) xs</code></pre></div>
 <p>Now consider 2D matrices, we want to “gravitize” the matrix so that every non-zero element in it falls to {left,right,up,down}-most possible position while preserving the order.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Dir</span> <span class="fu">=</span> <span class="dt">DU</span> <span class="fu">|</span> <span class="dt">DD</span> <span class="fu">|</span> <span class="dt">DL</span> <span class="fu">|</span> <span class="dt">DR</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>, <span class="dt">Show</span>, <span class="dt">Bounded</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Dir</span> <span class="fu">=</span> <span class="dt">DU</span> <span class="fu">|</span> <span class="dt">DD</span> <span class="fu">|</span> <span class="dt">DL</span> <span class="fu">|</span> <span class="dt">DR</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Enum</span>, <span class="dt">Show</span>, <span class="dt">Bounded</span>)
 <span class="ot">gravitizeMat ::</span> <span class="dt">Dir</span> <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]] <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]]
 gravitizeMat dir <span class="fu">=</span> borrow invertible (map compactLeft)
     <span class="kw">where</span> mirrorI <span class="fu">=</span> selfInv (map reverse)
@@ -939,10 +1146,10 @@ gravitizeMat dir <span class="fu">=</span> borrow invertible (map compactLeft)
             <span class="dt">DL</span> <span class="ot">-&gt;</span> rempty
             <span class="dt">DR</span> <span class="ot">-&gt;</span> mirrorI
             <span class="dt">DU</span> <span class="ot">-&gt;</span> diagonalI
-            <span class="dt">DD</span> <span class="ot">-&gt;</span> diagonalI <span class="ot">`rappend`</span> mirrorI</code></pre>
+            <span class="dt">DD</span> <span class="ot">-&gt;</span> diagonalI <span class="ot">`rappend`</span> mirrorI</code></pre></div>
 <p>here <code>Invertible</code> comes into play by the observation that <code>transpose</code> and <code>map reverse</code> are all invertible (moreover, they are inverse functions of themselves). So that we can tranform matrices and pretend the problem is only “gravitize to the left”.</p>
 <p>Here is one example:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">print2DMat ::</span> (<span class="dt">Show</span> a) <span class="ot">=&gt;</span> [[a]] <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">print2DMat ::</span> (<span class="dt">Show</span> a) <span class="ot">=&gt;</span> [[a]] <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
 print2DMat mat <span class="fu">=</span> <span class="kw">do</span>
     putStrLn <span class="st">&quot;Matrix: [&quot;</span>
     mapM_ print mat
@@ -960,7 +1167,7 @@ exampleMatGravitize <span class="fu">=</span> <span class="kw">do</span>
             putStrLn <span class="fu">$</span> <span class="st">&quot;Direction: &quot;</span> <span class="fu">++</span> show d
             print2DMat <span class="fu">$</span> gravitizeMat d mat
 
-    mapM_ showExample [minBound <span class="fu">..</span> maxBound]</code></pre>
+    mapM_ showExample [minBound <span class="fu">..</span> maxBound]</code></pre></div>
 <p>And the result will be:</p>
 <pre><code>Matrix: [
 [1,0,2,0]
@@ -997,6 +1204,7 @@ Matrix: [
 ]]></description>
     <pubDate>Mon, 17 Mar 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-03-17-capture-the-notion-of-invertible-functions.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Exploring alternatives</title>
@@ -1021,10 +1229,10 @@ Matrix: [
 <p>As always, <strong>bold sentences</strong> stands for my intuitions.</p>
 <h1 id="a-monoid-on-applicative-functors">“a monoid on applicative functors”</h1>
 <p><code>Alternative</code> is a typeclass lied in <code>Control.Applicative</code>, most of the time, I import this package to use functions like <code>&lt;$&gt;</code>, <code>&lt;*&gt;</code> and data type <code>ZipList</code>, but no more. I happened to heard this typeclass by a quick scan on typeclassopedia, and there are only few functions related to it, which I think might not take much time to try them all. These are all motivations about this article.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span></code></pre></div>
 <p>First function in this class is called <code>empty</code>, so I guess <strong><code>Alternative</code> is some typeclass that allows containing nothing</strong>. This would explain why there are so many <code>Applicative</code>s but I can only see <code>[]</code> and <code>Maybe</code> being instances of this typeclass.</p>
 <p>The document says <code>Alternative</code> is “a monoid on applicative functors”. So we can make an analogy between <code>(mempty, mappend)</code> from <code>Monoid</code> and <code>(empty, &lt;|&gt;)</code> from <code>Alternative</code>. Let's try it out:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> [<span class="dt">String</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> [<span class="dt">String</span>]
 v1 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty
 
 <span class="ot">v2 ::</span> [<span class="dt">String</span>]
@@ -1037,9 +1245,9 @@ v3 <span class="fu">=</span> pure <span class="dv">10</span> <span class="fu">&l
 v4 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> pure <span class="ch">&#39;A&#39;</span> <span class="fu">&lt;|&gt;</span> undefined
 
 <span class="ot">v5 ::</span> <span class="dt">Maybe</span> ()
-v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty</code></pre>
+v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty</code></pre></div>
 <p>Let's bring up GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 []
 λ<span class="fu">&gt;</span> v2
 [<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>]
@@ -1048,28 +1256,28 @@ v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span
 λ<span class="fu">&gt;</span> v4
 <span class="dt">Just</span> <span class="ch">&#39;A&#39;</span>
 λ<span class="fu">&gt;</span> v5
-<span class="dt">Nothing</span></code></pre>
+<span class="dt">Nothing</span></code></pre></div>
 <p><code>empty</code> works like what we expected, and <code>&lt;|&gt;</code> for lists seems straightforward. But when it comes to <code>Maybe</code>, we find that only the first non-<code>Nothing</code> one takes effect, if any.</p>
 <h1 id="some-and-many"><code>some</code> and <code>many</code></h1>
 <p>The type for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]
 v6 <span class="fu">=</span> some [<span class="st">&quot;not working&quot;</span>]
 
 <span class="ot">v7 ::</span> [[<span class="dt">String</span>]]
-v7 <span class="fu">=</span> some empty</code></pre>
+v7 <span class="fu">=</span> some empty</code></pre></div>
 <p>But when I try this out on GHCi, something is going wrong:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v6
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v6
 <span class="fu">^</span><span class="dt">CInterrupted</span><span class="fu">.</span>
 λ<span class="fu">&gt;</span> v7
-[]</code></pre>
+[]</code></pre></div>
 <p>I gave <code>v6</code> some time to run but it didn't terminate, so I cancelled it by hand.</p>
 <p>By looking at the document, I find some clue: <code>some</code> and <code>many</code> seem to look for some solutions to the following equations:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">some v <span class="fu">=</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> v <span class="fu">&lt;*&gt;</span> many v
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">some v <span class="fu">=</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> v <span class="fu">&lt;*&gt;</span> many v
 many v <span class="fu">=</span> some v <span class="fu">&lt;|&gt;</span> pure []
 
 <span class="co">-- rewrite to break the recursive relation will help?</span>
 some v <span class="fu">=</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> v <span class="fu">&lt;*&gt;</span> (some v <span class="fu">&lt;|&gt;</span> pure [])
-many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">$</span>) v <span class="fu">&lt;*&gt;</span> many v) <span class="fu">&lt;|&gt;</span> pure []</code></pre>
+many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">$</span>) v <span class="fu">&lt;*&gt;</span> many v) <span class="fu">&lt;|&gt;</span> pure []</code></pre></div>
 <p>I can't go any further from here, but doing some research, I find the following links that might help, but for now I just leave this two functions as mysteries. (Maybe it's just something like <a href="http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-Function.html#v:fix"><code>fix</code></a>, interesting, but IMHO not useful ).</p>
 <p>Related links:</p>
 <ul>
@@ -1079,7 +1287,7 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 <h1 id="optional"><code>optional</code></h1>
 <p>For the rest of the story, I'll just type them directly into GHCi.</p>
 <p>The last function about <code>Alternative</code> is <code>optional</code>, Let's check its type and feed it with some instances:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t optional
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t optional
 <span class="ot">optional ::</span> <span class="dt">Alternative</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
 λ<span class="fu">&gt;</span> optional <span class="dt">Nothing</span>
 <span class="dt">Just</span> <span class="dt">Nothing</span>
@@ -1088,9 +1296,9 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 λ<span class="fu">&gt;</span> optional []
 [<span class="dt">Nothing</span>]
 λ<span class="fu">&gt;</span> optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
-[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</code></pre>
+[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</code></pre></div>
 <p>Wait a minute, is <code>f a -&gt; f (Maybe a)</code> looks familiar to you? It looks like an unary function that has type <code>a -&gt; Maybe a</code> under some contexts. I think the simplest expression that matches this type would be <code>(Just &lt;$&gt;)</code>. Let's do the same thing on it.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
 (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)<span class="ot"> ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
 λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
 <span class="dt">Nothing</span>
@@ -1099,7 +1307,7 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
 []
 λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
-[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</code></pre>
+[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</code></pre></div>
 <p>Comparing the output of <code>optional</code> and <code>(Just &lt;$&gt;)</code>, we find that <code>optional</code> will attach an <code>empty</code> to the end of this monoid. And that <code>empty</code> would be the “none” part from <code>optional</code>'s description: “One or none”. In addition, we've seen <code>&lt;|&gt;</code> is the binary operation for this monoid, so we can have a guess:</p>
 <pre><code>optional v = (Just &lt;$&gt; v) &lt;|&gt; pure Nothing</code></pre>
 <p>And this turns out to be the exact implementation.</p>
@@ -1110,6 +1318,7 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 ]]></description>
     <pubDate>Sat, 08 Mar 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-03-08-exploring-alternatives.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Play with free monad</title>
@@ -1133,40 +1342,40 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 <p>In the rest of this article, I'd like to share my experience about how I explore functions listed <a href="http://hackage.haskell.org/package/free-4.4/docs/Control-Monad-Free.html">here</a> and some intuitions gained from this process. These intuitions are marked as <strong>bold sentences</strong>.</p>
 <h1 id="make-some-values-of-free-f-a">Make some values of <code>Free f a</code></h1>
 <p>Import related library, you shoule make sure you've installed <a href="http://hackage.haskell.org/package/free-4.4">The free package</a>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
-<span class="kw">import </span><span class="dt">Control.Monad.Free</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+<span class="kw">import </span><span class="dt">Control.Monad.Free</span></code></pre></div>
 <p>This first thing is to make some values of type <code>Free f a</code>.</p>
 <p>The easiest constructor is <code>Pure</code>. In order to fit the type <code>Free f a</code>, I choose to use a list as <code>f</code> and <code>Int</code> as <code>a</code>, because when I looked around the document, <code>f</code> is most likely to be an instance of <code>Functor</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v1 <span class="fu">=</span> <span class="dt">Pure</span> <span class="dv">10</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
+v1 <span class="fu">=</span> <span class="dt">Pure</span> <span class="dv">10</span></code></pre></div>
 <p>The next thing is about how to use the other constructor: <code>Free</code>. Its type signature is <code>Free :: f (Free f a) -&gt; Free f a</code>. It might not be that friendly, so I simplify it a little with <code>f = [], a = Int</code>. Then it becomes: <code>Free :: [Free [] Int] -&gt; Free [] Int</code>. Go back to the original signature, we can say that <code>Free</code> constructor takes some value of <code>Free f a</code> wrapped in another <code>f</code>, then produces <code>Free f a</code>. By using <code>Free</code>, <strong>the outside functor is somehow “ignored” from its type signature.</strong> Moreover, the part <code>f (Free f a)</code> suggests <strong>an exactly match of inside and outside functors.</strong></p>
 <p>Now we've already have a <code>v1 :: Free [] Int</code>, and by using <code>Free</code>, we should end up with some values of type <code>Free [] a</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v2 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v2 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
 v2 <span class="fu">=</span> <span class="dt">Free</span> [v1]
 
 <span class="ot">v3 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v3 <span class="fu">=</span> <span class="dt">Free</span> [v2,v2,v1]</code></pre>
+v3 <span class="fu">=</span> <span class="dt">Free</span> [v2,v2,v1]</code></pre></div>
 <p>Call GHCi to see the values:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
 <span class="dt">Pure</span> <span class="dv">10</span>
 λ<span class="fu">&gt;</span> v2
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>]
 λ<span class="fu">&gt;</span> v3
-<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</code></pre>
+<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</code></pre></div>
 <h1 id="free-monad-is-a-monad">Free monad is a monad</h1>
 <p>Of course free monad should be a monad, let's check the document to find some clues, in the instance list of <code>data Free f a</code>, we find this line:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">Free</span> f)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">Free</span> f)</code></pre></div>
 <p>This is enough for us to write some functions that can be used as the second argument of our old friend <code>&gt;&gt;=</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">foo1 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">foo1 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
 foo1 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="fu">$</span> x<span class="fu">*</span><span class="dv">2</span>, <span class="dt">Pure</span> <span class="fu">$</span> x<span class="fu">+</span><span class="dv">20</span>]
 
 <span class="ot">foo2 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">String</span>
 foo2 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="fu">$</span> show x]
 
 <span class="ot">v4 ::</span> <span class="dt">Free</span> [] <span class="dt">String</span>
-v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2</code></pre>
+v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2</code></pre></div>
 <p>And the GHCi output is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v4
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v4
 <span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
                  ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]
            ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
@@ -1180,31 +1389,31 @@ v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span cla
 <span class="fu">|</span>     foo2 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [show x]
 <span class="fu">|</span> <span class="kw">in</span> [<span class="dv">10</span>] <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2
 <span class="fu">|</span> <span class="fu">:</span>}
-[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]</code></pre>
+[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]</code></pre></div>
 <p>You can observe some similiarity between list monad and <code>Free []</code> monad. The intuition is <strong><code>Free []</code> monad seems to be a list monad but without <code>concat</code></strong>.</p>
 <h1 id="retract-and-liftf"><code>retract</code> and <code>liftF</code></h1>
 <p>The document says “<code>retract</code> is the left inverse of <code>lift</code> and <code>liftF</code>”. So we explore <code>liftF</code> first.</p>
 <p><code>liftF</code> is “A version of lift that can be used with just a Functor for f.” I'm not sure about this, but we can get started from another clue: the type signature <code>liftF :: (Functor f, MonadFree f m) =&gt; f a -&gt; m a</code>.</p>
 <p>We choose to stick to our simplification: <code>f = []</code>, so we need to find a suitable <code>m</code> that is an instance of <code>MonadFree [] m</code>.</p>
 <p>And this one looks promising:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">MonadFree</span> f (<span class="dt">Free</span> f)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">MonadFree</span> f (<span class="dt">Free</span> f)</code></pre></div>
 <p>So we can let <code>m = Free f</code>, which gives us the simplified type signature: <code>liftF :: [a] -&gt; Free [] a</code>. We can guess that <strong><code>liftF</code> lifts functors into free monads</strong>. To confirm about this, let's try to lift some functors:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v7 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v7 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
 v7 <span class="fu">=</span> liftF [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">8</span>]
 
 <span class="ot">v8 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>
 v8 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
 
 <span class="ot">v9 ::</span> <span class="dt">Free</span> ((<span class="ot">-&gt;</span>) <span class="dt">Int</span>) <span class="dt">Int</span>
-v9 <span class="fu">=</span> liftF (<span class="fu">+</span> <span class="dv">10</span>)</code></pre>
+v9 <span class="fu">=</span> liftF (<span class="fu">+</span> <span class="dv">10</span>)</code></pre></div>
 <p>I don't know if there is an easy way of observing <code>v9</code>, for now we just print <code>v7</code> and <code>v8</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v7
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v7
 <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">1</span>,<span class="dt">Pure</span> <span class="dv">2</span>,<span class="dt">Pure</span> <span class="dv">3</span>,<span class="dt">Pure</span> <span class="dv">4</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>]
 λ<span class="fu">&gt;</span> v8
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</code></pre>
+<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</code></pre></div>
 <p>Now we know we can lift any functors, so <strong>we can construct <code>Free f a</code> not only from <code>Pure</code> and <code>Free</code>, but also directly from functors.</strong></p>
 <p>Now think about simplified type signature of <code>retract :: Free [] a -&gt; [a]</code>. <strong>it is the reverse of <code>liftF</code></strong>. Let's have a try in code:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v10 ::</span> [<span class="dt">Int</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v10 ::</span> [<span class="dt">Int</span>]
 v10 <span class="fu">=</span> retract v3
 
 <span class="ot">v11 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
@@ -1214,53 +1423,53 @@ v11 <span class="fu">=</span> retract v8
 v12 <span class="fu">=</span> retract v4
 
 <span class="ot">v13 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
-v13 <span class="fu">=</span> retract v9</code></pre>
+v13 <span class="fu">=</span> retract v9</code></pre></div>
 <p>Call GHCi for results, now we can observe <code>v9</code> indirectly by using function <code>v13</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v10
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v10
 [<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">10</span>]
 λ<span class="fu">&gt;</span> v11
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
 λ<span class="fu">&gt;</span> v12
 [<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]
 λ<span class="fu">&gt;</span> map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
-[<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</code></pre>
+[<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</code></pre></div>
 <p>Therefore <strong><code>retract</code> converts a free monad back to a functor</strong>. (I suspect this conclusion is somehow wrong, but for now I cannot tell what exactly is wrong.)</p>
 <h1 id="iter-and-iterm"><code>iter</code> and <code>iterM</code></h1>
 <p>Use the same trick we've played before, let <code>f = []</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">iter  ::</span>            ([  a] <span class="ot">-&gt;</span>    a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span>   a
-<span class="ot">iterM ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> ([m a] <span class="ot">-&gt;</span> m  a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span> m a</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">iter  ::</span>            ([  a] <span class="ot">-&gt;</span>    a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span>   a
+<span class="ot">iterM ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> ([m a] <span class="ot">-&gt;</span> m  a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span> m a</code></pre></div>
 <p>I guess: <code>iter</code> converts a function who does some sorts of reduction on functors into another function who does the same thing but on free monads, and <code>iterM</code> is the monadic version of <code>iter</code>.</p>
 <p>Let's have a try:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v14 ::</span> <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v14 ::</span> <span class="dt">Int</span>
 v14 <span class="fu">=</span> iter sum v3
 
 <span class="ot">foo3 ::</span> [<span class="dt">IO</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span>
 foo3 ms <span class="fu">=</span> sum <span class="ot">`fmap`</span> sequence ms
 
 <span class="ot">v15 ::</span> <span class="dt">IO</span> <span class="dt">Int</span>
-v15 <span class="fu">=</span> iterM foo3 v7</code></pre>
+v15 <span class="fu">=</span> iterM foo3 v7</code></pre></div>
 <p>And look at GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v14
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v14
 <span class="dv">30</span>
 λ<span class="fu">&gt;</span> v15
-<span class="dv">34</span></code></pre>
+<span class="dv">34</span></code></pre></div>
 <p>Maybe I can say that <strong><code>iter</code> and <code>iterM</code> lift reduction (for functors) into free monads</strong></p>
 <h1 id="hoistfree"><code>hoistFree</code></h1>
 <p>The type signature contains <code>forall</code>, but I think it's fine to just ignore that part. As we are just trying to get things work:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">hoistFree ::</span> <span class="dt">Functor</span> g <span class="ot">=&gt;</span> (f a <span class="ot">-&gt;</span> g a) <span class="ot">-&gt;</span> <span class="dt">Free</span> f b <span class="ot">-&gt;</span> <span class="dt">Free</span> g b</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">hoistFree ::</span> <span class="dt">Functor</span> g <span class="ot">=&gt;</span> (f a <span class="ot">-&gt;</span> g a) <span class="ot">-&gt;</span> <span class="dt">Free</span> f b <span class="ot">-&gt;</span> <span class="dt">Free</span> g b</code></pre></div>
 <p>I guess <strong><code>hoistFree</code> lift a conversion between functors into a conversion between free monads.</strong></p>
 <p>I know list and <code>Maybe</code> are good friends:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Maybe</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Maybe</span>
 <span class="ot">v16 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
 v16 <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
 
 <span class="ot">v17 ::</span> [<span class="dt">String</span>]
-v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeToList <span class="fu">$</span> liftF v16</code></pre>
+v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeToList <span class="fu">$</span> liftF v16</code></pre></div>
 <p>Look at GHCi, we should observe the conversion from <code>Maybe String</code> to <code>[String]</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v16
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v16
 <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
 λ<span class="fu">&gt;</span> v17
-[<span class="st">&quot;Foo&quot;</span>]</code></pre>
+[<span class="st">&quot;Foo&quot;</span>]</code></pre></div>
 <h1 id="pure-and-_free"><code>_Pure</code> and <code>_Free</code></h1>
 <p>The type signatures of these two functions are really long, but don't be afraid, we still have some clue:</p>
 <ul>
@@ -1270,13 +1479,13 @@ v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeT
 <li>Ignore <code>forall</code> parts</li>
 </ul>
 <p>We end up with:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">_<span class="dt">Pure</span><span class="ot"> ::</span> (            a <span class="ot">-&gt;</span> [           a])
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">_<span class="dt">Pure</span><span class="ot"> ::</span> (            a <span class="ot">-&gt;</span> [           a])
       <span class="ot">-&gt;</span> ( <span class="dt">Free</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> a])
 _<span class="dt">Free</span><span class="ot"> ::</span> ((<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)) <span class="ot">-&gt;</span> [<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)])
-      <span class="ot">-&gt;</span> (       (<span class="dt">Free</span> <span class="dt">Maybe</span> a)  <span class="ot">-&gt;</span> [       <span class="dt">Free</span> <span class="dt">Maybe</span> a ])</code></pre>
+      <span class="ot">-&gt;</span> (       (<span class="dt">Free</span> <span class="dt">Maybe</span> a)  <span class="ot">-&gt;</span> [       <span class="dt">Free</span> <span class="dt">Maybe</span> a ])</code></pre></div>
 <p>I really can't figure out what these functions do, but I can still use it by feeding it with values of suitable type.</p>
 <p>So for the following part of this section, I provide codes and outputs without explanation.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v18 ::</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v18 ::</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>]
 v18 <span class="fu">=</span> _<span class="dt">Pure</span> (<span class="fu">:</span>[]) (liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="st">&quot;Haskell&quot;</span>)
 
 <span class="ot">v19 ::</span> [<span class="dt">String</span>]
@@ -1291,39 +1500,40 @@ v19 <span class="fu">=</span> mapMaybe retract v18
 v20 <span class="fu">=</span> _<span class="dt">Free</span> return (liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">123456</span>)
 
 <span class="ot">v21 ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> <span class="dt">Int</span>)
-v21 <span class="fu">=</span> retract <span class="ot">`fmap`</span> v20</code></pre>
+v21 <span class="fu">=</span> retract <span class="ot">`fmap`</span> v20</code></pre></div>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v18
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v18
 [<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Haskell&quot;</span>))]
 λ<span class="fu">&gt;</span> v19
 [<span class="st">&quot;Haskell&quot;</span>]
 λ<span class="fu">&gt;</span> v20
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">123456</span>))
 λ<span class="fu">&gt;</span> v21
-<span class="dt">Just</span> <span class="dv">123456</span></code></pre>
+<span class="dt">Just</span> <span class="dv">123456</span></code></pre></div>
 <h1 id="wrap-method"><code>wrap</code> method</h1>
 <p>This is a method defined for <code>MonadFree</code>s, the document says <strong>“Add a layer.”</strong>, let's see it in action:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v22 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v22 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
 v22 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">10</span>
 
 <span class="ot">v23 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
 v23 <span class="fu">=</span> wrap (<span class="dt">Just</span> v22)
 
 <span class="ot">v24 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pre>
+v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pre></div>
 <p>GHCi:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v22
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v22
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))
 λ<span class="fu">&gt;</span> v23
 <span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))
 λ<span class="fu">&gt;</span> v24
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</code></pre>
+<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</code></pre></div>
 <h1 id="call-it-a-day">Call it a day</h1>
 <p>This is the first time I attempted to do a “type-tetris”, although I still don't know what is free monad, but I do get some intuitions by using the functions provided. So let's call it a day.</p>
 </div>
 ]]></description>
     <pubDate>Mon, 03 Mar 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-03-03-play-with-free-monad.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 <item>
     <title>Add tags to your Hakyll blog</title>
@@ -1350,12 +1560,12 @@ v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pr
 </ul>
 <p>Let's start from scratch to keep it as simple as possible.</p>
 <p>So we initialize a new Hakyll website.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># initialize the website under dir `mondo`</span>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># initialize the website under dir `mondo`</span>
 $ <span class="kw">hakyll-init</span> mondo
 $ <span class="kw">cd</span> mondo
 <span class="co"># compile the code necessary,</span>
 <span class="co"># in order to see the website.</span>
-$ <span class="kw">ghc</span> site</code></pre>
+$ <span class="kw">ghc</span> site</code></pre></div>
 <h1 id="write-tags-in-posts">Write tags in posts</h1>
 <p>To create tags, we should first learn how to add tags to our posts, this step is easy, look at <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html">the document for tags</a>, it should begin with <code>tags:</code> followed with a comma-separated list.</p>
 <p>Now, let's modify posts from <code>mondo/posts</code>:</p>
@@ -1386,7 +1596,7 @@ tags: bar1, bar2
 <p>Before we go through all the posts and generate pages, we should build tags using <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#v:buildTags"><code>buildTags</code></a>.</p>
 <p>Unforuntately this function is not well-documented, a short explanation would be : <code>buildTags pattern makeId</code> finds all tags from posts captured by <code>pattern</code>, converts each tag to a corresponding <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Core-Identifier.html#t:Identifier"><code>Identifier</code></a> by using <code>makeId</code> and returns a value of type <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#t:Tags"><code>Tags</code></a>.</p>
 <p>From <code>site.hs</code> file, <strong>find these lines</strong>:</p>
-<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+<div class="sourceCode" startFrom="24"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>24
 25
 26
 27
@@ -1397,18 +1607,18 @@ tags: bar1, bar2
         compile <span class="fu">$</span> pandocCompiler
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    postCtx
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> postCtx
-            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table></div>
 <p>Insert the following code in front of it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
-tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
+tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre></div>
 <p>The code region above says: find all tags by searching the metadata of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
 <p>After tags are generated, we need to tell the post generator to include the corresponding tag informations for each tag, this is done by modifying <code>postCtx</code>. (for now you don't have to understand the detail of <code>postCtx</code> if you just want to setup up tags.)</p>
 <p>Put the following definition somewhere in your <code>site.hs</code>, I choose to put it right after the definition of <code>postCtx</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
-postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;tags&quot;</span> tags <span class="ot">`mappend`</span> postCtx</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
+postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;tags&quot;</span> tags <span class="ot">`mappend`</span> postCtx</code></pre></div>
 <p>And then change all the occurrence of <code>postCtx</code> inside the code region mentioned above.</p>
 <p>After this change, <strong>the code region should look like</strong>:</p>
-<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+<div class="sourceCode" startFrom="24"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>24
 25
 26
 27
@@ -1425,12 +1635,12 @@ postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;
         compile <span class="fu">$</span> pandocCompiler
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    (postCtxWithTags tags)
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> (postCtxWithTags tags)
-            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table></div>
 <h1 id="template-pages">Template pages</h1>
 <p>Now we need to add some changes to our templates, to make tags visible.</p>
 <p>I think the following changes in this section are self-explanatory even if you knows nothing about how template works. So Let's go though them quickly.</p>
 <p><strong>Modify your <code>templates/post.html</code> to make it looks like</strong>:</p>
-<pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
     Posted on $date$
     $if(author)$
         by $author$
@@ -1442,14 +1652,14 @@ postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;
     $endif$
 <span class="kw">&lt;/div&gt;</span>
 
-$body$</code></pre>
+$body$</code></pre></div>
 <p>Now we create the template for tag pages which lists all posts containing the corresponding tags. Since we already have a template for listing posts(<code>template/post-list.html</code>), we can simply reuse it.</p>
 <p>This is done by <strong>creating a new file: <code>templates/tag.html</code>, with the following content</strong>:</p>
-<pre class="sourceCode html"><code class="sourceCode html">$partial(&quot;templates/post-list.html&quot;)$</code></pre>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html">$partial(&quot;templates/post-list.html&quot;)$</code></pre></div>
 <h1 id="generate-tag-pages">Generate tag pages</h1>
 <p>This is the final step, we generate tag pages based on the templates we've written.</p>
 <p><strong>Put the following code somewhere after we build up <code>tags</code>,</strong> I choose to place it right after the line <code>tags &lt;- buildTags</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">    tagsRules tags <span class="fu">$</span> \tag pattern <span class="ot">-&gt;</span> <span class="kw">do</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">    tagsRules tags <span class="fu">$</span> \tag pattern <span class="ot">-&gt;</span> <span class="kw">do</span>
         <span class="kw">let</span> title <span class="fu">=</span> <span class="st">&quot;Posts tagged \&quot;&quot;</span> <span class="fu">++</span> tag <span class="fu">++</span> <span class="st">&quot;\&quot;&quot;</span>
         route idRoute
         compile <span class="fu">$</span> <span class="kw">do</span>
@@ -1461,15 +1671,17 @@ $body$</code></pre>
             makeItem <span class="st">&quot;&quot;</span>
                 <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/tag.html&quot;</span> ctx
                 <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> ctx
-                <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre>
+                <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></div>
 <p>Now it's done, recompile <code>site.hs</code> and have fun!</p>
 <h1 id="result">Result</h1>
 <p>Few screenshots after we adding tags:</p>
 <div class="figure">
-<img src="/assets/add-tags-result-1.jpg" alt="Inside posts" /><p class="caption">Inside posts</p>
+<img src="/assets/add-tags-result-1.jpg" alt="Inside posts" />
+<p class="caption">Inside posts</p>
 </div>
 <div class="figure">
-<img src="/assets/add-tags-result-2.jpg" alt="Tag page" /><p class="caption">Tag page</p>
+<img src="/assets/add-tags-result-2.jpg" alt="Tag page" />
+<p class="caption">Tag page</p>
 </div>
 <p>I also provide the final version of <code>mondo</code> directory <a href="/assets/add-tags-mondo.tar.bz2">here</a>.</p>
 <h1 id="acknowledgement">Acknowledgement</h1>
@@ -1478,48 +1690,8 @@ $body$</code></pre>
 ]]></description>
     <pubDate>Sat, 01 Mar 2014 00:00:00 UT</pubDate>
     <guid>http://javran.github.io//posts/2014-03-01-add-tags-to-your-hakyll-blog.html</guid>
-</item>
-<item>
-    <title>Type tetris and typeclassopedia</title>
-    <link>http://javran.github.io//posts/2014-02-28-type-tetris-and-typeclassopedia.html</link>
-    <description><![CDATA[<span class="blog-date">
-    2014-02-28 - 
-</span>
-<span class="blog-tag">
-    
-        [ 
-        <a href="/tags/type-tetris.html">type-tetris</a>, <a href="/tags/typeclassopedia.html">typeclassopedia</a>, <a href="/tags/haskell.html">haskell</a>
-        ]
-    
-</span>
-<br />
-<br />
-<div class="blog-main">
-<h1 id="lets-make-our-way-to-haskell">Let's make our way to Haskell</h1>
-<p>I've become one interested in Haskell for quite a while, but I think the only book I've read about Haskell is <a href="http://learnyouahaskell.com/">LYAH</a>. For more advanced topics, I just read articles from both <a href="http://www.haskell.org/haskellwiki/Introduction">haskell.org</a> and <a href="https://en.wikibooks.org/wiki/Haskell">Haskell wikibooks</a>. But as I dig deeper into more genius concepts and ideas in Haskell, things become complicated and mind-blowing and the biggest obstacle for me is that I have little understanding about types, which is ubiquitous in the world of Haskell.</p>
-<p>Today I'd like to share two interesting stuffs which, IMHO, would help you to learn more about Haskell: “type-tetris” and “typeclassopedia”.</p>
-<h1 id="type-tetris">Type-tetris</h1>
-<p>Just few days ago I came across <a href="http://www.reddit.com/r/haskell/comments/1yvfmc/programming_with_types_not_tutorials/">this link</a>, which eventually gave me an article: <a href="https://www.fpcomplete.com/user/chowells79/types-not-tutorials">Programming With Types, Not Tutorials</a>. In this article, the author shows us how to make Haskell code work as expected while have least understanding about underlying complex mathematical concepts. After reading this article, I realized that it might not be our responsibility to get full knowledge about “how does it work”, but we should really focus on “how to make it work”.</p>
-<p>I think this is the beauty of Haskell: thanks to its strong and statical type system, when some Haskell type-checks, we can almost be confident to say that it should work as expected. On the other hand, we should also be as lazy as Haskell in some sense, since no one puts a gun in your head and say “you should figure out how exactly it works”, we can just leave all the underlying math and proofs unexplored until we need it.</p>
-<p>Here I collect some comments on the previous Reddit link:</p>
-<blockquote>
-<p>drb226: This is what I like to call “type tetris.” It's fun, and you end up with correct programs without even having to understand what you just assembled. …</p>
-</blockquote>
-<blockquote>
-<p>camccann: I got through most of my physics courses by relying on dimensional analysis and hoping that if the units were right, so was the equation. It worked surprisingly often.</p>
-</blockquote>
-<p>If I understand correctly, as I've previous said in my twitter, the type itself is capable of carrying constraints with it, So types have already embeded with properties and proofs, and we can use types happily without knowing too much about what is going on.</p>
-<p>I like the idea of “type tetris”: let's just get started by using functions without “eagerly” understanding it. And see if we can grab some ideas when we are playing with it. By doing this, we focus more on “how to make it work” rather than “how it works”.</p>
-<h1 id="typeclassopedia">Typeclassopedia</h1>
-<p>In addition, I happen to know that there is a totally different way of learning Haskell: <a href="http://www.haskell.org/haskellwiki/Typeclassopedia">Typeclassopedia</a>. This is an article recommended by many people in Stack Overflow, which covers some basic understanding of how types are related to each other. By reading this article, we are trying to answer the question of “how it works” but are less interested in “how to make it work”.</p>
-<h1 id="summary">Summary</h1>
-<p>So here I've shown you two (potential) ways of learning Haskell and fortunately you can take both ways and hope the experience gained from both sides would help each other and bring you to a higher level understanding of Haskell.</p>
-<p>For myself, as a starting point of my type-tetris, I explored a little about <a href="http://stackoverflow.com/questions/13352205/what-are-free-monads">Free Monad</a> few days about, hopefully I'll write up another article in weekends to share the code and my thoughts. For typeclassopedia, I haven't read much. A potential plan would be to play “type-tetris” with stuffs mentioned in the typeclassopedia first, and then read the corresponding chapter to shed some light.</p>
-</div>
-]]></description>
-    <pubDate>Fri, 28 Feb 2014 00:00:00 UT</pubDate>
-    <guid>http://javran.github.io//posts/2014-02-28-type-tetris-and-typeclassopedia.html</guid>
+    <dc:creator>Javran Cheng</dc:creator>
 </item>
 
-    </channel> 
+    </channel>
 </rss>

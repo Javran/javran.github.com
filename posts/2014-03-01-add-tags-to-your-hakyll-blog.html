@@ -85,12 +85,12 @@
 </ul>
 <p>Let's start from scratch to keep it as simple as possible.</p>
 <p>So we initialize a new Hakyll website.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># initialize the website under dir `mondo`</span>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># initialize the website under dir `mondo`</span>
 $ <span class="kw">hakyll-init</span> mondo
 $ <span class="kw">cd</span> mondo
 <span class="co"># compile the code necessary,</span>
 <span class="co"># in order to see the website.</span>
-$ <span class="kw">ghc</span> site</code></pre>
+$ <span class="kw">ghc</span> site</code></pre></div>
 <h1 id="write-tags-in-posts">Write tags in posts</h1>
 <p>To create tags, we should first learn how to add tags to our posts, this step is easy, look at <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html">the document for tags</a>, it should begin with <code>tags:</code> followed with a comma-separated list.</p>
 <p>Now, let's modify posts from <code>mondo/posts</code>:</p>
@@ -121,7 +121,7 @@ tags: bar1, bar2
 <p>Before we go through all the posts and generate pages, we should build tags using <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#v:buildTags"><code>buildTags</code></a>.</p>
 <p>Unforuntately this function is not well-documented, a short explanation would be : <code>buildTags pattern makeId</code> finds all tags from posts captured by <code>pattern</code>, converts each tag to a corresponding <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Core-Identifier.html#t:Identifier"><code>Identifier</code></a> by using <code>makeId</code> and returns a value of type <a href="https://hackage.haskell.org/package/hakyll-4.4.3.2/docs/Hakyll-Web-Tags.html#t:Tags"><code>Tags</code></a>.</p>
 <p>From <code>site.hs</code> file, <strong>find these lines</strong>:</p>
-<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+<div class="sourceCode" startFrom="24"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>24
 25
 26
 27
@@ -132,18 +132,18 @@ tags: bar1, bar2
         compile <span class="fu">$</span> pandocCompiler
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    postCtx
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> postCtx
-            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table></div>
 <p>Insert the following code in front of it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
-tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- build up tags</span>
+tags <span class="ot">&lt;-</span> buildTags <span class="st">&quot;posts/*&quot;</span> (fromCapture <span class="st">&quot;tags/*.html&quot;</span>)</code></pre></div>
 <p>The code region above says: find all tags by searching the metadata of posts found by pattern <code>posts/*</code>, and the corresponding path for each tag will be of form <code>tags/*.html</code>. (e.g. for tag <code>foo</code>, you can generate a list of all posts that contains tag <code>foo</code> under URL: <code>{your-website}/tags/foo.html</code>.)</p>
 <p>After tags are generated, we need to tell the post generator to include the corresponding tag informations for each tag, this is done by modifying <code>postCtx</code>. (for now you don't have to understand the detail of <code>postCtx</code> if you just want to setup up tags.)</p>
 <p>Put the following definition somewhere in your <code>site.hs</code>, I choose to put it right after the definition of <code>postCtx</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
-postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;tags&quot;</span> tags <span class="ot">`mappend`</span> postCtx</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">postCtxWithTags ::</span> <span class="dt">Tags</span> <span class="ot">-&gt;</span> <span class="dt">Context</span> <span class="dt">String</span>
+postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;tags&quot;</span> tags <span class="ot">`mappend`</span> postCtx</code></pre></div>
 <p>And then change all the occurrence of <code>postCtx</code> inside the code region mentioned above.</p>
 <p>After this change, <strong>the code region should look like</strong>:</p>
-<table class="sourceCode haskell numberLines" startFrom="24"><tr class="sourceCode"><td class="lineNumbers"><pre>24
+<div class="sourceCode" startFrom="24"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>24
 25
 26
 27
@@ -160,12 +160,12 @@ postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;
         compile <span class="fu">$</span> pandocCompiler
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/post.html&quot;</span>    (postCtxWithTags tags)
             <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> (postCtxWithTags tags)
-            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table>
+            <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></td></tr></table></div>
 <h1 id="template-pages">Template pages</h1>
 <p>Now we need to add some changes to our templates, to make tags visible.</p>
 <p>I think the following changes in this section are self-explanatory even if you knows nothing about how template works. So Let's go though them quickly.</p>
 <p><strong>Modify your <code>templates/post.html</code> to make it looks like</strong>:</p>
-<pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;info&quot;</span><span class="kw">&gt;</span>
     Posted on $date$
     $if(author)$
         by $author$
@@ -177,14 +177,14 @@ postCtxWithTags tags <span class="fu">=</span> tagsField <span class="st">&quot;
     $endif$
 <span class="kw">&lt;/div&gt;</span>
 
-$body$</code></pre>
+$body$</code></pre></div>
 <p>Now we create the template for tag pages which lists all posts containing the corresponding tags. Since we already have a template for listing posts(<code>template/post-list.html</code>), we can simply reuse it.</p>
 <p>This is done by <strong>creating a new file: <code>templates/tag.html</code>, with the following content</strong>:</p>
-<pre class="sourceCode html"><code class="sourceCode html">$partial(&quot;templates/post-list.html&quot;)$</code></pre>
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html">$partial(&quot;templates/post-list.html&quot;)$</code></pre></div>
 <h1 id="generate-tag-pages">Generate tag pages</h1>
 <p>This is the final step, we generate tag pages based on the templates we've written.</p>
 <p><strong>Put the following code somewhere after we build up <code>tags</code>,</strong> I choose to place it right after the line <code>tags &lt;- buildTags</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">    tagsRules tags <span class="fu">$</span> \tag pattern <span class="ot">-&gt;</span> <span class="kw">do</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">    tagsRules tags <span class="fu">$</span> \tag pattern <span class="ot">-&gt;</span> <span class="kw">do</span>
         <span class="kw">let</span> title <span class="fu">=</span> <span class="st">&quot;Posts tagged \&quot;&quot;</span> <span class="fu">++</span> tag <span class="fu">++</span> <span class="st">&quot;\&quot;&quot;</span>
         route idRoute
         compile <span class="fu">$</span> <span class="kw">do</span>
@@ -196,15 +196,17 @@ $body$</code></pre>
             makeItem <span class="st">&quot;&quot;</span>
                 <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/tag.html&quot;</span> ctx
                 <span class="fu">&gt;&gt;=</span> loadAndApplyTemplate <span class="st">&quot;templates/default.html&quot;</span> ctx
-                <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre>
+                <span class="fu">&gt;&gt;=</span> relativizeUrls</code></pre></div>
 <p>Now it's done, recompile <code>site.hs</code> and have fun!</p>
 <h1 id="result">Result</h1>
 <p>Few screenshots after we adding tags:</p>
 <div class="figure">
-<img src="../assets/add-tags-result-1.jpg" alt="Inside posts" /><p class="caption">Inside posts</p>
+<img src="../assets/add-tags-result-1.jpg" alt="Inside posts" />
+<p class="caption">Inside posts</p>
 </div>
 <div class="figure">
-<img src="../assets/add-tags-result-2.jpg" alt="Tag page" /><p class="caption">Tag page</p>
+<img src="../assets/add-tags-result-2.jpg" alt="Tag page" />
+<p class="caption">Tag page</p>
 </div>
 <p>I also provide the final version of <code>mondo</code> directory <a href="../assets/add-tags-mondo.tar.bz2">here</a>.</p>
 <h1 id="acknowledgement">Acknowledgement</h1>

@@ -89,19 +89,19 @@
 <li><p>For <code>second</code>, we want type <code>d = a</code>, and the return value should be of type <code>(c,b)</code></p></li>
 </ul>
 <p>Put them together, we end up with type signature for <code>first</code> and <code>second</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
-<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
+<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</code></pre></div>
 <p>Introduce <code>f</code> and <code>(x,y)</code> for two arguments, and the implementation is straightforward:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
 first  f (x,y) <span class="fu">=</span> (f x, y)
 
 <span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)
-second f (x,y) <span class="fu">=</span> (x, f y)</code></pre>
+second f (x,y) <span class="fu">=</span> (x, f y)</code></pre></div>
 <p>Let's bring up GHCi for some tests:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
 (<span class="dv">1</span>,<span class="st">&quot;bar&quot;</span>)
 λ<span class="fu">&gt;</span> second (<span class="fu">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span>
-(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre>
+(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre></div>
 <h1 id="editing-a-function">Editing a function</h1>
 <p>There's two way of editing a function: we can either modify the return value (the <code>result</code> combinator), or modify the argument (the <code>argument</code> combinator).</p>
 <h2 id="the-result-combinator">the <code>result</code> combinator</h2>
@@ -112,27 +112,27 @@ second f (x,y) <span class="fu">=</span> (x, f y)</code></pre>
 <li>We want to modify on the return value of <code>g</code>, therefore <code>d = a</code>.</li>
 <li>Then the resulting function should be of type <code>c -&gt; b</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</code></pre></div>
 <p>We know that <code>-&gt;</code> is right-associative, (e.g. <code>p -&gt; q -&gt; r</code> and <code>p -&gt; (q -&gt; r)</code> are equivalent) so we can also think <code>result</code> as a function that accepts 3 arguments, and its type signature becomes:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</code></pre></div>
 <p>Introduce <code>f</code> <code>g</code> <code>x</code> for these 3 arguments, and we want a value of type <code>b</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> undefined</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result f g x <span class="fu">=</span> undefined</code></pre></div>
 <ul>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li>To produce a value of <code>a</code>, we might need <code>g :: c -&gt; a</code>.</li>
 <li><code>x</code> is of type <code>c</code></li>
 </ul>
 <p>Chaining these facts together, we yield the implementation of <code>result</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> f (g x)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result f g x <span class="fu">=</span> f (g x)</code></pre></div>
 <p>This is exactly the definition of <a href="http://hackage.haskell.org/package/base-4.6.0.1/docs/src/GHC-Base.html#."><code>(.)</code></a>, function composition.</p>
 <p>So we end up with:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
+result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre></div>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
-<span class="dv">7</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
+<span class="dv">7</span></code></pre></div>
 <h2 id="the-argument-combinator">the <code>argument</code> combinator</h2>
 <p>Use the same approach, let’s implement <code>argument</code> combinator:</p>
 <ul>
@@ -142,16 +142,16 @@ result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre>
 <li>the resulting function should be of type <code>a -&gt; d</code>.</li>
 </ul>
 <p>Write down the type signature, introduce <code>f</code>, <code>g</code>, <code>x</code>, the goal is to produce a value of type <code>d</code></p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> undefined</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+argument f g x <span class="fu">=</span> undefined</code></pre></div>
 <ul>
 <li>To produce a value of <code>d</code>, we might need <code>g :: b -&gt; d</code>.</li>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li><code>x</code> is of type <code>a</code></li>
 </ul>
 <p>Therefore the definition of <code>argument</code> is:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> g (f x)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+argument f g x <span class="fu">=</span> g (f x)</code></pre></div>
 <p>To simplify this, we do some transformations:</p>
 <pre><code>  g (f x)
 &gt; (g . f) x           -- definition of (.)
@@ -160,12 +160,12 @@ argument f g x <span class="fu">=</span> g (f x)</code></pre>
 &gt; ((flip (.)) f g) x  -- flip
 &gt; flip (.) f g x      -- rule of function application</code></pre>
 <p>Finally:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
 <span class="co">-- point-free style of: argument f g x = flip (.) f g x</span>
-argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
+argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre></div>
 <p>Test it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
-<span class="st">&quot;2048!&quot;</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
+<span class="st">&quot;2048!&quot;</span></code></pre></div>
 <h1 id="walking-into-data">Walking into data</h1>
 <p>For now we have <code>first</code> and <code>second</code> to work with pairs, and <code>argument</code> and <code>result</code> with functions, but sometimes we want to go deeper inside data, say:</p>
 <ul>
@@ -175,23 +175,23 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>Here I try to give some explanation of how to do this.</p>
 <h2 id="goal-1">Goal 1</h2>
 <p>To modify <code>d</code> in <code>(a,(c,d))</code>, that means we need to first focus on <code>(c,d)</code>, this can be achieved by <code>second</code>, let’s pass a const function <code>const &quot;Focus&quot;</code> to <code>second</code>, so we know we are focusing on which portion of the data:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
 λ<span class="fu">&gt;</span> <span class="kw">let</span> toFocus <span class="fu">=</span> const <span class="st">&quot;Focus&quot;</span>
 λ<span class="fu">&gt;</span> second toFocus d1
-(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre>
+(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre></div>
 <p>We now know that missing <code>(2,1)</code> is passed to <code>toFocus</code>, we can use a lambda expression to capture it:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
-(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
+(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre></div>
 <p>Let's do something more interesting:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
-(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
+(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre></div>
 <p>The observation is: inside the body of lambda expression <code>\x -&gt; ...</code>, we can do something to <code>(2,1)</code>. That means we can apply semantic editor combinators on it!</p>
 <p>Now assume we are dealing with <code>(2,1)</code>, to reach the goal, we apply <code>const 5</code> to its <code>fst</code> part:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
-(<span class="dv">5</span>,<span class="dv">1</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
+(<span class="dv">5</span>,<span class="dv">1</span>)</code></pre></div>
 <p>Now replace the body of <code>\x -&gt; ...</code> with what we want:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
-(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
+(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre></div>
 <p>Done!</p>
 <h2 id="some-intuition">Some intuition</h2>
 <p>Let's not hurry to Goal 2, I’ll show you some transformations:</p>
@@ -203,17 +203,17 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 <p>It might not be straightforward at first glance, since function composition is usually “right to left”, that is, <code>(g . f)</code> means “first apply <code>f</code>, on its result, apply <code>g</code>. But here, <code>second . first</code> can be read as”walk to the <code>snd</code> part, and then <code>fst</code> part of it“.</p>
 <p>My explanation is: <strong>the function does compose from right to left, but what’s “carrying” with the composition is not the data</strong>.</p>
 <p>The observation is: no matter how many functions are composed together, the resulting function just takes one argument:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u
 u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
 u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
-u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre>
+u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre></div>
 <p>So what is the argument taken by this resulting function? In our Goal 1, it is <code>const 5</code>, the “how we modify it” part. So despite that <code>(second . first) (const 5) d1</code> is simple, to understand it, what you really need would be: <code>((second . first) (const 5)) d1</code></p>
 <p>The observation is: <strong>functions are composed from right to left and the mutator is buried more deeply as the composition goes</strong>.</p>
 <p>To see this, let's just pick up combinators randomly to form a chain of function composition, and check its type:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
 first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (a, d) <span class="ot">-&gt;</span> (b, d)
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (second <span class="fu">.</span> first) (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, (a, d)) <span class="ot">-&gt;</span> (c, (b, d))
@@ -226,7 +226,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 λ<span class="fu">&gt;</span> <span class="fu">:</span>t (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
 <span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span>
-     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre>
+     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre></div>
 <p>Reading the composition from right to left, <strong>we are constructing / definiting the “shape” of the data this combinator would like to work on</strong>. In contrast, reading from left to right, <strong>we are deconstructing the data until we reach for the position that we want to modify</strong>. These two views does not conflict with each other.</p>
 <p>Therefore, IMHO, when we are thinking about how to walking into the interesting portion, it's helpful thinking about build up combinator from left to right. But to answer the question about why, we should instead read from right to left.</p>
 <p>In addition, here is another interesting observation:</p>
@@ -245,7 +245,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>apply <code>(* 2)</code></li>
 </ul>
 <p>Try it out:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
 λ<span class="fu">&gt;</span> <span class="kw">let</span> m2 <span class="fu">=</span> (result <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> first) (<span class="fu">*</span><span class="dv">2</span>) d2
 λ<span class="fu">&gt;</span> (snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>
 (<span class="dv">30</span>,<span class="dv">1</span>)
@@ -258,7 +258,7 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) d2
 <span class="dv">30</span>
 λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) m2
-<span class="dv">60</span></code></pre>
+<span class="dv">60</span></code></pre></div>
 <p>Last two programs are just rewriting the two programs right before it, Do you notice the symmetry between <code>fst . ($ 20) . snd . ($ 10)</code> and <code>result . second . result . first</code>?</p>
 <p>I believe this is not an accident, but to explain it might beyond my reach, this is what I have for now:</p>
 <p>With the help of <a href="http://www.haskell.org/haskellwiki/Lambdabot">Lambdabot</a>:</p>
@@ -274,8 +274,8 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>resulting data: <code>[b]</code></li>
 </ul>
 <p>and this is exactly <code>map</code>.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
-element <span class="fu">=</span> map</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+element <span class="fu">=</span> map</code></pre></div>
 <p>Here I show you 3 extra combinators:</p>
 <p><em>inHead</em> modifies the head of a list:</p>
 <ul>
@@ -283,18 +283,18 @@ element <span class="fu">=</span> map</code></pre>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inHead f [] <span class="fu">=</span> []
-inHead f (x<span class="fu">:</span>xs) <span class="fu">=</span> f x <span class="fu">:</span> xs</code></pre>
+inHead f (x<span class="fu">:</span>xs) <span class="fu">=</span> f x <span class="fu">:</span> xs</code></pre></div>
 <p><em>inTail</em> modifies the tail of a list:</p>
 <ul>
 <li>how to modify: <code>f :: [a] -&gt; [a]</code></li>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inTail f [] <span class="fu">=</span> []
-inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class="fu">:</span> f xs</code></pre>
+inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class="fu">:</span> f xs</code></pre></div>
 <p><em>inPos</em> modifies the element at a given position:</p>
 <ul>
 <li>we first need the position: <code>Int</code></li>
@@ -302,14 +302,14 @@ inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class=
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
 inPos n f xs
       <span class="fu">|</span> null xs    <span class="fu">=</span> xs
       <span class="fu">|</span> n <span class="fu">&lt;</span> <span class="dv">0</span>      <span class="fu">=</span> xs
       <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">0</span>     <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
                      <span class="kw">in</span> f y <span class="fu">:</span> ys
       <span class="fu">|</span> otherwise  <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
-                     <span class="kw">in</span> y <span class="fu">:</span> inPos (n <span class="fu">-</span> <span class="dv">1</span>) f ys</code></pre>
+                     <span class="kw">in</span> y <span class="fu">:</span> inPos (n <span class="fu">-</span> <span class="dv">1</span>) f ys</code></pre></div>
 <p><em>inSome</em> is like <code>inPos</code>, but modifies multiple positions:</p>
 <ul>
 <li>we first need the indices: <code>[Int]</code></li>
@@ -317,10 +317,10 @@ inPos n f xs
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre></div>
 <p>Some examples:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
 λ<span class="fu">&gt;</span> (second <span class="fu">.</span> element) (<span class="fu">+</span> <span class="dv">1</span>) d1
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>])
 λ<span class="fu">&gt;</span> (first <span class="fu">.</span> element) ord d1
@@ -333,14 +333,14 @@ inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</
 (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">800</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
 λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> replicate <span class="dv">3</span> (replicate <span class="dv">4</span> <span class="dv">0</span>)
 λ<span class="fu">&gt;</span> (inPos <span class="dv">1</span> <span class="fu">.</span> inPos <span class="dv">2</span>) (const <span class="dv">255</span>) d2
-[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre>
+[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre></div>
 <h1 id="walking-into-user-defined-data">Walking into user defined data</h1>
 <p>Suppose user has defined a binary tree:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="fu">=</span> <span class="dt">Node</span> a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="fu">=</span> <span class="dt">Node</span> a
                <span class="fu">|</span> <span class="dt">Tree</span> (<span class="dt">BinTree</span> a) (<span class="dt">BinTree</span> a) a
-                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</code></pre>
+                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</code></pre></div>
 <p>To write a combinator is easy, just follow the pattern <code>&lt;combinator&gt; &lt;mutator&gt; &lt;data&gt; = &lt;modified-data&gt;</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
 treeV f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
 treeV f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> l r (f x)
 
@@ -361,12 +361,12 @@ treeNonLeaf f r <span class="fu">=</span> r
 
 <span class="ot">treeLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
 treeLeaf f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
-treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</code></pre>
+treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</code></pre></div>
 <p>Here <code>treeElement</code> walks into the data part of each node to do the modification. Since <code>treeElement = fmap</code>, we can generalize <code>element = fmap</code>, to make it work for not only lists and <code>BinTree</code>s, but also any other Functors.</p>
 <p><code>treeLeft</code> and <code>treeRight</code> walks into left subtree and right subtree, respectively. But to target at the value of a <code>BinTree</code>, we need <code>treeV</code>, which takes care of walking into the data field of a tree.</p>
 <p><code>treeNonLeaf</code> and <code>treeLeaf</code> are just like <code>treeElement</code> but works merely on non-leaf nodes and leaf nodes, respectively.</p>
 <p>See them in action:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeElement <span class="fu">.</span> first) even d1 <span class="co">-- test for each node, if the `fst` part is an even?</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">2</span>)) (<span class="dt">True</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">4</span>)) (<span class="dt">False</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span>
@@ -376,34 +376,34 @@ treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span 
 λ<span class="fu">&gt;</span> (treeNonLeaf <span class="fu">.</span> first) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span>
 <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">100</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">100</span>,<span class="dv">6</span>)
 λ<span class="fu">&gt;</span> (treeLeaf <span class="fu">.</span> second) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre>
+<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre></div>
 <h1 id="combining-semantic-editor-combinators">Combining semantic editor combinators</h1>
 <p>The semantic editor combinators can also be chained together.</p>
 <p>Suppose we have some combinators:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
 λ<span class="fu">&gt;</span> <span class="kw">let</span> c05 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">5</span>)
 λ<span class="fu">&gt;</span> <span class="kw">let</span> c06 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">6</span>)
-λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre>
+λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre></div>
 <p>For a given list, we want to apply <code>c13</code> and <code>c05</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
 λ<span class="fu">&gt;</span> c06 (c13 d)
 [<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]
 λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c13) d
-[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre>
+[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre></div>
 <p>So we can use function composition to compose semantic editors:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13)) d2
 (<span class="dv">1</span>,[<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13) <span class="fu">.</span> (second c05)) d2
 (<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
 λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second (c13 <span class="fu">.</span> c05))) d2
-(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre>
+(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre></div>
 <p>The last example says “apply <code>1</code>, (back to the top level and then) walk into the <code>snd</code> part, apply <code>c05</code> and then <code>c13</code>”. I think this “distributive property” will make things extremely flexible.</p>
 <p>Since the function composition happens from right to left, if some combinators are trying to modify the same field, the “leftmost” one take effect:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
 [<span class="dv">5</span>,<span class="dv">1</span>]
 λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]
-[<span class="dv">6</span>,<span class="dv">1</span>]</code></pre>
+[<span class="dv">6</span>,<span class="dv">1</span>]</code></pre></div>
 </div>
 
 <br /><br />
