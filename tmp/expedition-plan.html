@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Expedition Plan</title>
+
+    <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-4">
+            <table class="table table-hover" id="exp-candidates">
+              <thead>
+                <tr>
+                  <th>Expedition</th>
+                  <th>Time in minutes</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+        </div>
+        <div class="col-md-8">
+          <div class="row">
+            <div class="col-xs-2">Fuel priority</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="fuel-priority" value="2" placeholder="Fuel Priority">
+            </div>
+            <div class="col-xs-2">Steel priority</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="steel-priority" value="1" placeholder="Steel Priority">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-2">Ammo priority</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="ammo-priority" value="6" placeholder="Ammo Priority">
+            </div>
+            <div class="col-xs-2">Bauxite priority</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="bauxite-priority" value="1" placeholder="Bauxite Priority">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xs-2">AFK hours</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="afk-hh" value="0" placeholder="AFK hours">
+            </div>
+            <div class="col-xs-2">AFK minutes</div>
+            <div class="col-xs-4">
+              <input type="number" class="form-control" id="afk-mm" value="0" placeholder="AFK minutes">
+            </div>
+          </div>
+          <button type="button" class="btn btn-default btn-lg btn-block" id="do-calc-btn">Calculate</button>
+
+          <table class="table table-hover" id="exp-results">
+            <thead>
+              <tr>
+                <th>Expedition set</th>
+                <th>Fuel/hr</th>
+                <th>Ammo/hr</th>
+                <th>Steel/hr</th>
+                <th>Bauxite/hr</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+
+
+        </div>
+      </div>
+      
+    </div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="/assets/KanColleHelpers.js"></script>
+    <script>
+      var KE = PS["KanColle.Expedition"];
+      var tb = $('table#exp-candidates tbody');
+      tb.empty();
+      KE.allExpeditions.forEach( function(curVal, ind) {
+          var row = $('<tr></tr>');
+          $('<td></td>').html( '<input type="checkbox" checked="true" name="exp-candidate-item" value="' + curVal.id.toString() + '">' + curVal.id.toString() ).appendTo(row);
+          $('<td></td>').text(curVal.cost.time).appendTo(row);
+          tb.append( row );
+      });
+
+      var resultTable = $('#exp-results tbody');
+      $('#do-calc-btn').click(function(){
+
+          var fP = parseInt($("#fuel-priority").val(),10);
+          var aP = parseInt($("#ammo-priority").val(),10);
+          var sP = parseInt($("#steel-priority").val(),10);
+          var bP = parseInt($("#bauxite-priority").val(),10);
+          var afkHH = parseInt($("#afk-hh").val(),10);
+          var afkMM = parseInt($("#afk-mm").val(),10);
+
+          var afkTime = afkHH*60 + afkMM;
+
+          var KEP = PS["KanColle.Expedition.Plan"];
+          resultTable.empty();
+          
+          var selectedItemsQ = $('input[name="exp-candidate-item"]:checked');
+
+          var selectedItems = [];
+          selectedItemsQ.each( function() {
+              selectedItems.push( parseInt( $(this).attr("value"),10) );
+          });
+
+          var results = KEP.calcWithExpeditionIdsJS(fP,aP,sP,bP,afkTime,selectedItems);
+
+          for (var i = 0; i < results.length && i < 50; ++i) {
+              var curVal = results[i];
+              var row = $('<tr></tr>');
+              $('<td></td>').text(curVal.eIds).appendTo(row);
+              $('<td></td>').text(curVal.hourly.fuel.toFixed(2)).appendTo(row);
+              $('<td></td>').text(curVal.hourly.ammo.toFixed(2)).appendTo(row);
+              $('<td></td>').text(curVal.hourly.steel.toFixed(2)).appendTo(row);
+              $('<td></td>').text(curVal.hourly.bauxite.toFixed(2)).appendTo(row);
+              $('<td></td>').text(curVal.resourceScore.toFixed(2)).appendTo(row);
+              resultTable.append( row );
+
+          }
+      
+      });
+
+    </script>
+  </body>
+</html>
