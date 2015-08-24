@@ -70,7 +70,14 @@
               <input type="number" class="form-control" id="afk-mm" value="0" placeholder="AFK minutes">
             </div>
           </div>
-          <button type="button" class="btn btn-default btn-lg btn-block" id="do-calc-btn">Calculate</button>
+
+          <div class="row">
+            <div class="col-xs-2">Available fleets</div>
+            <label class="radio-inline col-xs-2"><input type="radio" name="fleet-cnt" value="1">1</label>
+            <label class="radio-inline col-xs-2"><input type="radio" name="fleet-cnt" value="2">2</label>
+            <label class="radio-inline col-xs-2"><input type="radio" name="fleet-cnt" value="3" checked="checked">3</label>
+            <button type="button" class="btn btn-default btn-lg col-xs-3" id="do-calc-btn">Calculate</button>
+          </div>
 
           <table class="table table-hover" id="exp-results">
             <thead>
@@ -90,7 +97,7 @@
 
         </div>
       </div>
-      
+
     </div>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -124,7 +131,7 @@
 
           var KEP = PS["KanColle.Expedition.Plan"];
           resultTable.empty();
-          
+
           var selectedItemsQ = $('input[name="exp-candidate-item"]:checked');
 
           var selectedItems = [];
@@ -132,7 +139,9 @@
               selectedItems.push( parseInt( $(this).attr("value"),10) );
           });
 
-          var results = KEP.calcWithExpeditionIdsJS(fP,aP,sP,bP,afkTime,selectedItems);
+          var fleetCount = parseInt( $("input:radio[name=fleet-cnt]:checked").val(), 10);
+
+          var results = KEP.calcWithExpeditionIdsFleetCountJS(fleetCount,fP,aP,sP,bP,afkTime,selectedItems);
 
           for (var i = 0; i < results.length && i < 50; ++i) {
               var curVal = results[i];
@@ -146,7 +155,7 @@
               resultTable.append( row );
 
           }
-      
+
       });
 
     </script>
