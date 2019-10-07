@@ -83,50 +83,50 @@
 <h1 id="working-on-code">Working on Code</h1>
 <p>First we use <a href="http://xmonad.org/xmonad-docs/xmonad/XMonad-Core.html#t:XState"><code>XState</code></a> to make xmonad record its startup time. This can be done easily using <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Util-ExtensibleState.html"><code>XMonad.Util.ExtensibleState</code></a> from <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/">xmonad-contrib</a>.</p>
 <p>What we need is a new type of data so that we can put it into <code>XState</code>. And the data we need is just the startup time:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span>
-<span class="kw">import </span><span class="dt">XMonad.Core</span>
-<span class="kw">import qualified</span> <span class="dt">XMonad.Util.ExtensibleState</span> <span class="kw">as</span> <span class="dt">XS</span>
-<span class="kw">import </span><span class="dt">Data.Time.Clock</span>
-<span class="kw">import </span><span class="dt">Data.Typeable</span>
-<span class="kw">import </span><span class="dt">Data.Time.Calendar</span>
-<span class="kw">newtype</span> <span class="dt">StartupTime</span> <span class="fu">=</span>
-    <span class="dt">StartupTime</span> <span class="dt">UTCTime</span>
-        <span class="kw">deriving</span> <span class="dt">Typeable</span>
-
-<span class="kw">instance</span> <span class="dt">ExtensionClass</span> <span class="dt">StartupTime</span> <span class="kw">where</span>
-    initialValue <span class="fu">=</span> <span class="dt">StartupTime</span> <span class="fu">$</span> <span class="dt">UTCTime</span> d dt
-        <span class="kw">where</span>
-            d <span class="fu">=</span> fromGregorian <span class="dv">1970</span> <span class="dv">1</span> <span class="dv">1</span>
-            dt <span class="fu">=</span> secondsToDiffTime <span class="dv">0</span></code></pre></div>
-<p>We don't have to deal with <code>extensionType</code>, as it is default to <code>StateExtension</code>. Of course we want the startup time updated after an xmonad restart. And actually we would never use <code>initialValue</code> since we will update it immediately after xmonad gets started, but we need to put some value here to make compiler happy, we could have put an <code>undefined</code> or <code>error &quot;msg&quot;</code> here, but I chose the safest way.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1"></a><span class="ot">{-# LANGUAGE DeriveDataTypeable #-}</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">import</span> <span class="dt">XMonad.Core</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">XMonad.Util.ExtensibleState</span> <span class="kw">as</span> <span class="dt">XS</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">import</span> <span class="dt">Data.Time.Clock</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">import</span> <span class="dt">Data.Typeable</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="kw">import</span> <span class="dt">Data.Time.Calendar</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">newtype</span> <span class="dt">StartupTime</span> <span class="ot">=</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>    <span class="dt">StartupTime</span> <span class="dt">UTCTime</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>        <span class="kw">deriving</span> <span class="dt">Typeable</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a></span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="kw">instance</span> <span class="dt">ExtensionClass</span> <span class="dt">StartupTime</span> <span class="kw">where</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>    initialValue <span class="ot">=</span> <span class="dt">StartupTime</span> <span class="op">$</span> <span class="dt">UTCTime</span> d dt</span>
+<span id="cb1-13"><a href="#cb1-13"></a>        <span class="kw">where</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a>            d <span class="ot">=</span> fromGregorian <span class="dv">1970</span> <span class="dv">1</span> <span class="dv">1</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a>            dt <span class="ot">=</span> secondsToDiffTime <span class="dv">0</span></span></code></pre></div>
+<p>We don't have to deal with <code>extensionType</code>, as it is default to <code>StateExtension</code>. Of course we want the startup time updated after an xmonad restart. And actually we would never use <code>initialValue</code> since we will update it immediately after xmonad gets started, but we need to put some value here to make compiler happy, we could have put an <code>undefined</code> or <code>error "msg"</code> here, but I chose the safest way.</p>
 <p>Next, we modify <code>startupHook</code> to record its startup time:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span>
-
-<span class="ot">myStartupHook ::</span> <span class="dt">X</span> ()
-myStartupHook <span class="fu">=</span> <span class="kw">do</span>
-    <span class="co">-- &lt;your original startupHook, can leave this part blank&gt;</span>
-    <span class="dt">StartupTime</span> <span class="fu">&lt;$&gt;</span> liftIO getCurrentTime <span class="fu">&gt;&gt;=</span> XS.put</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">import</span> <span class="dt">Control.Applicative</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="ot">myStartupHook ::</span> <span class="dt">X</span> ()</span>
+<span id="cb2-4"><a href="#cb2-4"></a>myStartupHook <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>    <span class="co">-- &lt;your original startupHook, can leave this part blank&gt;</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>    <span class="dt">StartupTime</span> <span class="op">&lt;$&gt;</span> liftIO getCurrentTime <span class="op">&gt;&gt;=</span> XS.put</span></code></pre></div>
 <p>And EWMH is enabled by passing your config into <a href="http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Hooks-EwmhDesktops.html#v:ewmh"><code>ewmh</code></a> function so that it adds few more hooks to do its job. We make our own <code>myEwmh</code> to take care of the event handler:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
-<span class="kw">import </span>import <span class="dt">XMonad.Hooks.EwmhDesktops</span>
-
-<span class="ot">myEwmh ::</span> <span class="dt">XConfig</span> a <span class="ot">-&gt;</span> <span class="dt">XConfig</span> a
-myEwmh c <span class="fu">=</span> c { startupHook     <span class="fu">=</span> startupHook c     <span class="fu">&lt;&gt;</span> ewmhDesktopsStartup
-             , handleEventHook <span class="fu">=</span> handleEventHook c <span class="fu">&lt;&gt;</span> myEwmhDesktopsEventHook
-             , logHook         <span class="fu">=</span> logHook c         <span class="fu">&lt;&gt;</span> ewmhDesktopsLogHook
-             }</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">import</span> <span class="dt">Data.Monoid</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">import</span> import <span class="dt">XMonad.Hooks.EwmhDesktops</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="ot">myEwmh ::</span> <span class="dt">XConfig</span> a <span class="ot">-&gt;</span> <span class="dt">XConfig</span> a</span>
+<span id="cb3-5"><a href="#cb3-5"></a>myEwmh c <span class="ot">=</span> c { startupHook     <span class="ot">=</span> startupHook c     <span class="op">&lt;&gt;</span> ewmhDesktopsStartup</span>
+<span id="cb3-6"><a href="#cb3-6"></a>             , handleEventHook <span class="ot">=</span> handleEventHook c <span class="op">&lt;&gt;</span> myEwmhDesktopsEventHook</span>
+<span id="cb3-7"><a href="#cb3-7"></a>             , logHook         <span class="ot">=</span> logHook c         <span class="op">&lt;&gt;</span> ewmhDesktopsLogHook</span>
+<span id="cb3-8"><a href="#cb3-8"></a>             }</span></code></pre></div>
 <p>And finally we wrap <code>ewmhDesktopsEventHook</code> in our <code>myEwmhDesktopsEventHook</code> to add an extra guard: if the request is sent right after xmonad gets started (less than 5 seconds in my code), the request gets ignored:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span>
-myEwmhDesktopsEventHook e<span class="fu">@</span>(<span class="dt">ClientMessageEvent</span>
-    {ev_message_type <span class="fu">=</span> mt}) <span class="fu">=</span> <span class="kw">do</span>
-    a_aw <span class="ot">&lt;-</span> getAtom <span class="st">&quot;_NET_ACTIVE_WINDOW&quot;</span>
-    curTime <span class="ot">&lt;-</span> liftIO getCurrentTime
-    <span class="dt">StartupTime</span> starupTime <span class="ot">&lt;-</span> XS.get
-    <span class="kw">if</span>    mt <span class="fu">==</span> a_aw
-       <span class="fu">&amp;&amp;</span> curTime <span class="ot">`diffUTCTime`</span> starupTime <span class="fu">&lt;=</span> <span class="fl">5.0</span>
-       <span class="kw">then</span> return (<span class="dt">All</span> <span class="dt">True</span>)
-       <span class="kw">else</span> ewmhDesktopsEventHook e
-myEwmhDesktopsEventHook e <span class="fu">=</span> ewmhDesktopsEventHook e</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="ot">myEwmhDesktopsEventHook ::</span> <span class="dt">Event</span> <span class="ot">-&gt;</span> <span class="dt">X</span> <span class="dt">All</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>myEwmhDesktopsEventHook e<span class="op">@</span>(<span class="dt">ClientMessageEvent</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>    {ev_message_type <span class="ot">=</span> mt}) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>    a_aw <span class="ot">&lt;-</span> getAtom <span class="st">&quot;_NET_ACTIVE_WINDOW&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>    curTime <span class="ot">&lt;-</span> liftIO getCurrentTime</span>
+<span id="cb4-6"><a href="#cb4-6"></a>    <span class="dt">StartupTime</span> starupTime <span class="ot">&lt;-</span> XS.get</span>
+<span id="cb4-7"><a href="#cb4-7"></a>    <span class="kw">if</span>    mt <span class="op">==</span> a_aw</span>
+<span id="cb4-8"><a href="#cb4-8"></a>       <span class="op">&amp;&amp;</span> curTime <span class="ot">`diffUTCTime`</span> starupTime <span class="op">&lt;=</span> <span class="fl">5.0</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a>       <span class="kw">then</span> <span class="fu">return</span> (<span class="dt">All</span> <span class="dt">True</span>)</span>
+<span id="cb4-10"><a href="#cb4-10"></a>       <span class="kw">else</span> ewmhDesktopsEventHook e</span>
+<span id="cb4-11"><a href="#cb4-11"></a>myEwmhDesktopsEventHook e <span class="ot">=</span> ewmhDesktopsEventHook e</span></code></pre></div>
 <p>Now you might recompile xmonad and enjoy the change.</p>
 <h1 id="resources">Resources</h1>
 <p><strong>About my config</strong></p>

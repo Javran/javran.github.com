@@ -103,155 +103,155 @@
 </ul></li>
 <li><p><a href="http://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2">binutils-2.25.tar.bz2</a> (latest)</p></li>
 <li><p>Checksum:</p>
-<pre><code>$ (cd $SOURCES; sha256sum *)
-22defc65cfa3ef2a3395faaea75d6331c6e62ea5dfacfed3e2ec17b08c882923  binutils-2.25.tar.bz2
-97ed664694b02b4d58ac2cafe443d02a388f9cb3645e7778843b5086a5fec040  gcc-4.4.3.tar.bz2
-2020c98295856aa13fda0f2f3a4794490757fc24bcca918d52cc8b4917b972dd  gcc-4.9.2.tar.bz2
-d66a8e52572f4ff819fe5c4e34c6dd1e84a7763e25c3fadcc222453c0bd8534d  ghc-6.10.4-src.tar.bz2
-07d06efa9222638c80b72ceda957d3c7bcbdc2665a9738dd6ef6c0751a05e8ed  ghc-6.8.3-x86_64-unknown-linux.tar.bz2
-156169c28dab837922260a0fbfcc873c679940d805a736dc78aeb1b60c13ccd9  ghc-7.0.3-src.tar.bz2
-f2ee1289a33cc70539287129841acc7eaf16112bb60c59b5a6ee91887bfd836d  ghc-7.4.2-src.tar.bz2
-59e3bd514a1820cc1c03e1808282205c0b8518369acae12645ceaf839e6f114b  ghc-7.8.4-src.tar.bz2</code></pre></li>
+<pre><code>  $ (cd $SOURCES; sha256sum *)
+  22defc65cfa3ef2a3395faaea75d6331c6e62ea5dfacfed3e2ec17b08c882923  binutils-2.25.tar.bz2
+  97ed664694b02b4d58ac2cafe443d02a388f9cb3645e7778843b5086a5fec040  gcc-4.4.3.tar.bz2
+  2020c98295856aa13fda0f2f3a4794490757fc24bcca918d52cc8b4917b972dd  gcc-4.9.2.tar.bz2
+  d66a8e52572f4ff819fe5c4e34c6dd1e84a7763e25c3fadcc222453c0bd8534d  ghc-6.10.4-src.tar.bz2
+  07d06efa9222638c80b72ceda957d3c7bcbdc2665a9738dd6ef6c0751a05e8ed  ghc-6.8.3-x86_64-unknown-linux.tar.bz2
+  156169c28dab837922260a0fbfcc873c679940d805a736dc78aeb1b60c13ccd9  ghc-7.0.3-src.tar.bz2
+  f2ee1289a33cc70539287129841acc7eaf16112bb60c59b5a6ee91887bfd836d  ghc-7.4.2-src.tar.bz2
+  59e3bd514a1820cc1c03e1808282205c0b8518369acae12645ceaf839e6f114b  ghc-7.8.4-src.tar.bz2</code></pre></li>
 </ul>
 <p>Note: I can only confirm that I got a working ghc-7.8.4 following these steps in this specific order. It is likely that these early versions of ghc has troubles with the latest gcc and binutils.</p>
 <h1 id="install-ghc-6.8.3">Install ghc-6.8.3</h1>
 <p>In order to get a clean installation, I will isolate each package by using a different prefix directory. But it is still okay to share the same prefix directory if you want. The major difference is that if you share prefix directory between packages, the old files might not be overwritten and thus remain there and become junk.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf ghc-6.8.3-x86_64-unknown-linux.tar.bz2
-$ <span class="kw">cd</span> ghc-6.8.3
-$ <span class="kw">mkdir</span> prefix
-$ <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-6.8.3/prefix
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>$ <span class="fu">tar</span> -xf ghc-6.8.3-x86_64-unknown-linux.tar.bz2</span>
+<span id="cb2-3"><a href="#cb2-3"></a>$ <span class="bu">cd</span> ghc-6.8.3</span>
+<span id="cb2-4"><a href="#cb2-4"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb2-5"><a href="#cb2-5"></a>$ <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/ghc-6.8.3/prefix</span>
+<span id="cb2-6"><a href="#cb2-6"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <h1 id="install-ghc-6.10.4">Install ghc-6.10.4</h1>
 <p>From now on, whenever you see a <code>make</code> command without explicit goal, feel free to pass <code>-j N</code> to <code>make</code> to speed up compilation (where <code>N</code> is usually set to the number of available CPU cores plus one). If something fails, just rerun <code>make</code> (maybe with a smaller <code>N</code>), do <code>make clean</code> only if you are getting the same error message through different runs.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf ghc-6.10.4-src.tar.bz2
-$ <span class="kw">cd</span> ghc-6.10.4
-$ <span class="kw">mkdir</span> prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-6.10.4/prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>$ <span class="fu">tar</span> -xf ghc-6.10.4-src.tar.bz2</span>
+<span id="cb3-3"><a href="#cb3-3"></a>$ <span class="bu">cd</span> ghc-6.10.4</span>
+<span id="cb3-4"><a href="#cb3-4"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb3-5"><a href="#cb3-5"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/ghc-6.10.4/prefix</span>
+<span id="cb3-6"><a href="#cb3-6"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-6.8.3/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="fu">make</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <h1 id="install-gcc-4.4.3">Install gcc-4.4.3</h1>
 <p>Now you need to install a newer version of gcc. The gcc shipped with RHEL5 is gcc-4.1.2, which is too old to get ghc-7.0 compiled.</p>
 <p>The reason why we do not use the latest version of gcc is that it cannot compile ghc-7.0 either…</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf gcc-4.4.3.tar.bz2
-$ <span class="kw">tar</span> -xf gcc-4.9.2.tar.bz2</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>$ <span class="fu">tar</span> -xf gcc-4.4.3.tar.bz2</span>
+<span id="cb4-3"><a href="#cb4-3"></a>$ <span class="fu">tar</span> -xf gcc-4.9.2.tar.bz2</span></code></pre></div>
 <p>Copy a script from gcc-4.9.2 to gcc-4.4.3:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cp</span> gcc-4.9.2/contrib/download_prerequisites gcc-4.4.3/contrib/</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a>$ <span class="fu">cp</span> gcc-4.9.2/contrib/download_prerequisites gcc-4.4.3/contrib/</span></code></pre></div>
 <p>And edit the one under gcc-4.4.3 (feel free to replace <code>$EDITOR</code> with whatever text editor you like):</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ot">$EDITOR</span> <span class="kw">gcc-4.4.3/contrib/download_prerequisites</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a>$ <span class="va">$EDITOR</span> <span class="ex">gcc-4.4.3/contrib/download_prerequisites</span></span></code></pre></div>
 <p>Find and comment out the following line:</p>
 <pre><code># GRAPHITE_LOOP_OPT=yes</code></pre>
 <p>Go into the directory, it's time to retrieve some dependencies:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> gcc-4.4.3
-$ <span class="kw">./contrib/download_prerequisites</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a>$ <span class="bu">cd</span> gcc-4.4.3</span>
+<span id="cb8-2"><a href="#cb8-2"></a>$ <span class="ex">./contrib/download_prerequisites</span></span></code></pre></div>
 <p>Now create another directory under gcc-4.4.3. To compile gcc you need to make your working directory different from gcc’s. Proceed with routines, remember to set prefix and enable only the necessary language. (P.S. <code>--enable-languages=c,c++</code> is necessary because to bootstrap newer versions of gcc, you will need both <code>gcc</code> and <code>g++</code>).</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">mkdir</span> prefix
-$ <span class="kw">mkdir</span> gcc-build
-$ <span class="kw">cd</span> gcc-build
-$ <span class="kw">../configure</span> --prefix <span class="ot">$SOURCES</span>/gcc-4.4.3/prefix --enable-languages=c,c++
-$ <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb9-2"><a href="#cb9-2"></a>$ <span class="fu">mkdir</span> gcc-build</span>
+<span id="cb9-3"><a href="#cb9-3"></a>$ <span class="bu">cd</span> gcc-build</span>
+<span id="cb9-4"><a href="#cb9-4"></a>$ <span class="ex">../configure</span> --prefix <span class="va">$SOURCES</span>/gcc-4.4.3/prefix --enable-languages=c,c++</span>
+<span id="cb9-5"><a href="#cb9-5"></a>$ <span class="fu">make</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <p>And now gcc-4.4.3 should be ready, here we can set it permanently. Put the following line to the bottom of your <code>~/.bashrc</code> file:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># if you want to unset $SOURCES afterwards,</span>
-<span class="co"># remember to replace it with the real location.</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.4.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># if you want to unset $SOURCES afterwards,</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co"># remember to replace it with the real location.</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/gcc-4.4.3/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
 <p>Now verify:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
-$ <span class="kw">gcc</span> --version
-<span class="kw">gcc</span> (GCC) <span class="kw">4.4.3</span>
-<span class="kw">Copyright</span> (C) <span class="kw">2010</span> Free Software Foundation, Inc.
-<span class="kw">This</span> is free software<span class="kw">;</span> <span class="kw">see</span> the source for copying conditions.  There is NO
-<span class="kw">warranty;</span> <span class="kw">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1"></a>$ <span class="bu">source</span> ~/.bashrc</span>
+<span id="cb11-2"><a href="#cb11-2"></a>$ <span class="fu">gcc</span> --version</span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="fu">gcc</span> (GCC) <span class="ex">4.4.3</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="ex">Copyright</span> (C) <span class="ex">2010</span> Free Software Foundation, Inc.</span>
+<span id="cb11-5"><a href="#cb11-5"></a><span class="ex">This</span> is free software<span class="kw">;</span> <span class="ex">see</span> the source for copying conditions.  There is NO</span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="ex">warranty</span><span class="kw">;</span> <span class="ex">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</span></code></pre></div>
 <h1 id="install-ghc-7.0.3">Install ghc-7.0.3</h1>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf ghc-7.0.3-src.tar.bz2
-$ <span class="kw">cd</span> ghc-7.0.3
-$ <span class="kw">mkdir</span> prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.0.3/prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>$ <span class="fu">tar</span> -xf ghc-7.0.3-src.tar.bz2</span>
+<span id="cb12-3"><a href="#cb12-3"></a>$ <span class="bu">cd</span> ghc-7.0.3</span>
+<span id="cb12-4"><a href="#cb12-4"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb12-5"><a href="#cb12-5"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/ghc-7.0.3/prefix</span>
+<span id="cb12-6"><a href="#cb12-6"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-6.10.4/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="fu">make</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <h1 id="install-ghc-7.4.2">Install ghc-7.4.2</h1>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf ghc-7.4.2-src.tar.bz2
-$ <span class="kw">cd</span> ghc-7.4.2
-$ <span class="kw">mkdir</span> prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.4.2/prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>$ <span class="fu">tar</span> -xf ghc-7.4.2-src.tar.bz2</span>
+<span id="cb13-3"><a href="#cb13-3"></a>$ <span class="bu">cd</span> ghc-7.4.2</span>
+<span id="cb13-4"><a href="#cb13-4"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb13-5"><a href="#cb13-5"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/ghc-7.4.2/prefix</span>
+<span id="cb13-6"><a href="#cb13-6"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-7.0.3/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="fu">make</span></span>
+<span id="cb13-7"><a href="#cb13-7"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <h1 id="optional-update-gcc-and-binutils">(Optional) Update gcc and binutils</h1>
 <p>This step might not be necessary.</p>
 <p>Some packages from hackage (for example ciper-aes) would fail because of the out-dated binutils.</p>
 <p>So before we get to 7.8.4, I want to make sure we have a newer version of toolchain, by using which we might also benefit from new optimization techniques.</p>
 <p>First we build the latest version of gcc from source.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
-$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-<span class="co"># should have been extracted when we were compiling gcc-4.4.3</span>
-$ <span class="kw">cd</span> gcc-4.9.2
-$ <span class="kw">./contrib/download_prerequisites</span>
-$ <span class="kw">mkdir</span> prefix
-$ <span class="kw">mkdir</span> gcc-build
-$ <span class="kw">cd</span> gcc-build
-$ <span class="kw">../configure</span> --prefix <span class="ot">$SOURCES</span>/gcc-4.9.2/prefix --enable-languages=c,c++
-$ <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1"></a>$ <span class="bu">source</span> ~/.bashrc</span>
+<span id="cb14-2"><a href="#cb14-2"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="co"># should have been extracted when we were compiling gcc-4.4.3</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>$ <span class="bu">cd</span> gcc-4.9.2</span>
+<span id="cb14-5"><a href="#cb14-5"></a>$ <span class="ex">./contrib/download_prerequisites</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb14-7"><a href="#cb14-7"></a>$ <span class="fu">mkdir</span> gcc-build</span>
+<span id="cb14-8"><a href="#cb14-8"></a>$ <span class="bu">cd</span> gcc-build</span>
+<span id="cb14-9"><a href="#cb14-9"></a>$ <span class="ex">../configure</span> --prefix <span class="va">$SOURCES</span>/gcc-4.9.2/prefix --enable-languages=c,c++</span>
+<span id="cb14-10"><a href="#cb14-10"></a>$ <span class="fu">make</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <p>Then we can change the last few lines added to our <code>~/.bashrc</code> to:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
 <p>Then we build binutils:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc
-$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf binutils-2.25.tar.bz2
-$ <span class="kw">cd</span> binutils-2.25
-$ <span class="kw">mkdir</span> prefix
-$ <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/binutils-2.25/prefix
-$ <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1"></a>$ <span class="bu">source</span> ~/.bashrc</span>
+<span id="cb16-2"><a href="#cb16-2"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>$ <span class="fu">tar</span> -xf binutils-2.25.tar.bz2</span>
+<span id="cb16-4"><a href="#cb16-4"></a>$ <span class="bu">cd</span> binutils-2.25</span>
+<span id="cb16-5"><a href="#cb16-5"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb16-6"><a href="#cb16-6"></a>$ <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/binutils-2.25/prefix</span>
+<span id="cb16-7"><a href="#cb16-7"></a>$ <span class="fu">make</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <p>And add it to <code>PATH</code> by appending these lines to your <code>~/.bashrc</code>:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
 <p>And don’t forget to source your <code>bashrc</code>:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">source</span> ~/.bashrc</code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1"></a>$ <span class="bu">source</span> ~/.bashrc</span></code></pre></div>
 <h1 id="install-ghc-7.8.4">Install ghc-7.8.4</h1>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">cd</span> <span class="ot">$SOURCES</span>
-$ <span class="kw">tar</span> -xf ghc-7.8.4-src.tar.bz2
-$ <span class="kw">cd</span> ghc-7.8.4
-$ <span class="kw">mkdir</span> prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">./configure</span> --prefix <span class="ot">$SOURCES</span>/ghc-7.8.4/prefix
-$ <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span> <span class="kw">make</span>
-$ <span class="kw">make</span> install</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1"></a>$ <span class="bu">cd</span> <span class="va">$SOURCES</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>$ <span class="fu">tar</span> -xf ghc-7.8.4-src.tar.bz2</span>
+<span id="cb19-3"><a href="#cb19-3"></a>$ <span class="bu">cd</span> ghc-7.8.4</span>
+<span id="cb19-4"><a href="#cb19-4"></a>$ <span class="fu">mkdir</span> prefix</span>
+<span id="cb19-5"><a href="#cb19-5"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="ex">./configure</span> --prefix <span class="va">$SOURCES</span>/ghc-7.8.4/prefix</span>
+<span id="cb19-6"><a href="#cb19-6"></a>$ <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/ghc-7.4.2/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span> <span class="fu">make</span></span>
+<span id="cb19-7"><a href="#cb19-7"></a>$ <span class="fu">make</span> install</span></code></pre></div>
 <h1 id="add-ghc-to-path-and-clean-up-.bashrc">Add ghc to PATH and Clean up <code>.bashrc</code></h1>
 <p>By now you might have a quite messy <code>$PATH</code>, don’t worry, here we will clean it up.</p>
 <p>The last few lines in your <code>.bashrc</code> will look like:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">export</span> <span class="ot">SOURCES=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources&quot;</span>
-
-<span class="co"># if you want to unset $SOURCES afterwards,</span>
-<span class="co"># remember to replace it with the real location.</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
-<p>Here we add one line for ghc-7.8.4, and replace <code>$SOURCES</code> with the corresponding value (here I assume <code>SOURCE=&quot;${HOME}/sources&quot;</code>, but you need to change it accordingly).</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#export SOURCES=&quot;${HOME}/sources&quot;</span>
-
-<span class="co"># if you want to unset $SOURCES afterwards,</span>
-<span class="co"># remember to replace it with the real location.</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/gcc-4.9.2/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/binutils-2.25/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span>
-<span class="kw">export</span> <span class="ot">PATH=</span><span class="st">&quot;</span><span class="ot">${HOME}</span><span class="st">/sources/ghc-7.8.4/prefix/bin:</span><span class="ot">$PATH</span><span class="st">&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1"></a><span class="bu">export</span> <span class="va">SOURCES=</span><span class="st">&quot;</span><span class="va">${HOME}</span><span class="st">/sources&quot;</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co"># if you want to unset $SOURCES afterwards,</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="co"># remember to replace it with the real location.</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/gcc-4.9.2/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb20-6"><a href="#cb20-6"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">$SOURCES</span><span class="st">/binutils-2.25/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
+<p>Here we add one line for ghc-7.8.4, and replace <code>$SOURCES</code> with the corresponding value (here I assume <code>SOURCE="${HOME}/sources"</code>, but you need to change it accordingly).</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1"></a><span class="co">#export SOURCES=&quot;${HOME}/sources&quot;</span></span>
+<span id="cb21-2"><a href="#cb21-2"></a></span>
+<span id="cb21-3"><a href="#cb21-3"></a><span class="co"># if you want to unset $SOURCES afterwards,</span></span>
+<span id="cb21-4"><a href="#cb21-4"></a><span class="co"># remember to replace it with the real location.</span></span>
+<span id="cb21-5"><a href="#cb21-5"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">${HOME}</span><span class="st">/sources/gcc-4.9.2/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb21-6"><a href="#cb21-6"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">${HOME}</span><span class="st">/sources/binutils-2.25/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb21-7"><a href="#cb21-7"></a><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">${HOME}</span><span class="st">/sources/ghc-7.8.4/prefix/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span></code></pre></div>
 <p>Now everything is done, just logout and relogin, then you should have ghc-7.8.4 ready.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co"># login</span>
-$ <span class="kw">ld</span> --version
-<span class="kw">GNU</span> ld (GNU Binutils) <span class="kw">2.25</span>
-<span class="kw">Copyright</span> (C) <span class="kw">2014</span> Free Software Foundation, Inc.
-<span class="kw">This</span> program is free software<span class="kw">;</span> <span class="kw">you</span> may redistribute it under the terms of
-<span class="kw">the</span> GNU General Public License version 3 or (at your option) <span class="kw">a</span> later version.
-<span class="kw">This</span> program has absolutely no warranty.
-$ <span class="kw">gcc</span> --version
-<span class="kw">gcc</span> (GCC) <span class="kw">4.9.2</span>
-<span class="kw">Copyright</span> (C) <span class="kw">2014</span> Free Software Foundation, Inc.
-<span class="kw">This</span> is free software<span class="kw">;</span> <span class="kw">see</span> the source for copying conditions.  There is NO
-<span class="kw">warranty;</span> <span class="kw">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-$ <span class="kw">ghc</span> --version
-<span class="kw">The</span> Glorious Glasgow Haskell Compilation System, version 7.8.4</code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1"></a><span class="co"># login</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>$ <span class="fu">ld</span> --version</span>
+<span id="cb22-3"><a href="#cb22-3"></a><span class="ex">GNU</span> ld (GNU Binutils) <span class="ex">2.25</span></span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="ex">Copyright</span> (C) <span class="ex">2014</span> Free Software Foundation, Inc.</span>
+<span id="cb22-5"><a href="#cb22-5"></a><span class="ex">This</span> program is free software<span class="kw">;</span> <span class="ex">you</span> may redistribute it under the terms of</span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="ex">the</span> GNU General Public License version 3 or (at your option) <span class="ex">a</span> later version.</span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="ex">This</span> program has absolutely no warranty.</span>
+<span id="cb22-8"><a href="#cb22-8"></a>$ <span class="fu">gcc</span> --version</span>
+<span id="cb22-9"><a href="#cb22-9"></a><span class="fu">gcc</span> (GCC) <span class="ex">4.9.2</span></span>
+<span id="cb22-10"><a href="#cb22-10"></a><span class="ex">Copyright</span> (C) <span class="ex">2014</span> Free Software Foundation, Inc.</span>
+<span id="cb22-11"><a href="#cb22-11"></a><span class="ex">This</span> is free software<span class="kw">;</span> <span class="ex">see</span> the source for copying conditions.  There is NO</span>
+<span id="cb22-12"><a href="#cb22-12"></a><span class="ex">warranty</span><span class="kw">;</span> <span class="ex">not</span> even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</span>
+<span id="cb22-13"><a href="#cb22-13"></a></span>
+<span id="cb22-14"><a href="#cb22-14"></a>$ <span class="ex">ghc</span> --version</span>
+<span id="cb22-15"><a href="#cb22-15"></a><span class="ex">The</span> Glorious Glasgow Haskell Compilation System, version 7.8.4</span></code></pre></div>
 <h1 id="afterthoughts">Afterthoughts</h1>
 <p>I hope this article might be helpful in case you want to do something similar. I like the idea of bootstrapping, but sometimes it is painful to walk through the process, especially when the working binary version is too old and you need to bootstrap multiple times.</p>
 <p>Lesson learned: backward compatibility is not always reliable. If you want some old software to work, prefering tools with version relatively recent to that software over ones with the latest version usually help.</p>

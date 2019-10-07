@@ -82,134 +82,134 @@
 <p>In the rest of this article, I'd like to share my experience about how I explore functions listed <a href="http://hackage.haskell.org/package/free-4.4/docs/Control-Monad-Free.html">here</a> and some intuitions gained from this process. These intuitions are marked as <strong>bold sentences</strong>.</p>
 <h1 id="make-some-values-of-free-f-a">Make some values of <code>Free f a</code></h1>
 <p>Import related library, you shoule make sure you've installed <a href="http://hackage.haskell.org/package/free-4.4">The free package</a>.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
-<span class="kw">import </span><span class="dt">Control.Monad.Free</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">import</span> <span class="dt">Control.Monad.Free</span></span></code></pre></div>
 <p>This first thing is to make some values of type <code>Free f a</code>.</p>
 <p>The easiest constructor is <code>Pure</code>. In order to fit the type <code>Free f a</code>, I choose to use a list as <code>f</code> and <code>Int</code> as <code>a</code>, because when I looked around the document, <code>f</code> is most likely to be an instance of <code>Functor</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v1 <span class="fu">=</span> <span class="dt">Pure</span> <span class="dv">10</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="ot">v1 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>v1 <span class="ot">=</span> <span class="dt">Pure</span> <span class="dv">10</span></span></code></pre></div>
 <p>The next thing is about how to use the other constructor: <code>Free</code>. Its type signature is <code>Free :: f (Free f a) -&gt; Free f a</code>. It might not be that friendly, so I simplify it a little with <code>f = [], a = Int</code>. Then it becomes: <code>Free :: [Free [] Int] -&gt; Free [] Int</code>. Go back to the original signature, we can say that <code>Free</code> constructor takes some value of <code>Free f a</code> wrapped in another <code>f</code>, then produces <code>Free f a</code>. By using <code>Free</code>, <strong>the outside functor is somehow “ignored” from its type signature.</strong> Moreover, the part <code>f (Free f a)</code> suggests <strong>an exactly match of inside and outside functors.</strong></p>
 <p>Now we've already have a <code>v1 :: Free [] Int</code>, and by using <code>Free</code>, we should end up with some values of type <code>Free [] a</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v2 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v2 <span class="fu">=</span> <span class="dt">Free</span> [v1]
-
-<span class="ot">v3 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v3 <span class="fu">=</span> <span class="dt">Free</span> [v2,v2,v1]</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a><span class="ot">v2 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>v2 <span class="ot">=</span> <span class="dt">Free</span> [v1]</span>
+<span id="cb3-3"><a href="#cb3-3"></a></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="ot">v3 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>v3 <span class="ot">=</span> <span class="dt">Free</span> [v2,v2,v1]</span></code></pre></div>
 <p>Call GHCi to see the values:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
-<span class="dt">Pure</span> <span class="dv">10</span>
-λ<span class="fu">&gt;</span> v2
-<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>]
-λ<span class="fu">&gt;</span> v3
-<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a>λ<span class="op">&gt;</span> v1</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="dt">Pure</span> <span class="dv">10</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>λ<span class="op">&gt;</span> v2</span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>]</span>
+<span id="cb4-5"><a href="#cb4-5"></a>λ<span class="op">&gt;</span> v3</span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">10</span>],<span class="dt">Pure</span> <span class="dv">10</span>]</span></code></pre></div>
 <h1 id="free-monad-is-a-monad">Free monad is a monad</h1>
 <p>Of course free monad should be a monad, let's check the document to find some clues, in the instance list of <code>data Free f a</code>, we find this line:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">Free</span> f)</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">Free</span> f)</span></code></pre></div>
 <p>This is enough for us to write some functions that can be used as the second argument of our old friend <code>&gt;&gt;=</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">foo1 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-foo1 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="fu">$</span> x<span class="fu">*</span><span class="dv">2</span>, <span class="dt">Pure</span> <span class="fu">$</span> x<span class="fu">+</span><span class="dv">20</span>]
-
-<span class="ot">foo2 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">String</span>
-foo2 x <span class="fu">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="fu">$</span> show x]
-
-<span class="ot">v4 ::</span> <span class="dt">Free</span> [] <span class="dt">String</span>
-v4 <span class="fu">=</span> v1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a><span class="ot">foo1 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">Int</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>foo1 x <span class="ot">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="op">$</span> x<span class="op">*</span><span class="dv">2</span>, <span class="dt">Pure</span> <span class="op">$</span> x<span class="op">+</span><span class="dv">20</span>]</span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="ot">foo2 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Free</span> [] <span class="dt">String</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a>foo2 x <span class="ot">=</span> <span class="dt">Free</span> [<span class="dt">Pure</span> <span class="op">$</span> <span class="fu">show</span> x]</span>
+<span id="cb6-6"><a href="#cb6-6"></a></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="ot">v4 ::</span> <span class="dt">Free</span> [] <span class="dt">String</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>v4 <span class="ot">=</span> v1 <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo2</span></code></pre></div>
 <p>And the GHCi output is:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v4
-<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
-                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]
-           ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]
-                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]]
-     ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;120&quot;</span>]
-                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]]
-           ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;100&quot;</span>]
-                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;70&quot;</span>]]]]
-λ<span class="fu">&gt;</span> <span class="fu">:</span>{
-<span class="fu">|</span> <span class="kw">let</span> foo1 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [x<span class="fu">*</span><span class="dv">2</span>,x<span class="fu">+</span><span class="dv">20</span>]
-<span class="fu">|</span>     foo2 <span class="fu">=</span> \x <span class="ot">-&gt;</span> [show x]
-<span class="fu">|</span> <span class="kw">in</span> [<span class="dv">10</span>] <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo1 <span class="fu">&gt;&gt;=</span> foo2
-<span class="fu">|</span> <span class="fu">:</span>}
-[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a>λ<span class="op">&gt;</span> v4</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]</span>
+<span id="cb7-3"><a href="#cb7-3"></a>                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]</span>
+<span id="cb7-4"><a href="#cb7-4"></a>           ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]</span>
+<span id="cb7-5"><a href="#cb7-5"></a>                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;60&quot;</span>]]]</span>
+<span id="cb7-6"><a href="#cb7-6"></a>     ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;120&quot;</span>]</span>
+<span id="cb7-7"><a href="#cb7-7"></a>                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;80&quot;</span>]]</span>
+<span id="cb7-8"><a href="#cb7-8"></a>           ,<span class="dt">Free</span> [<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;100&quot;</span>]</span>
+<span id="cb7-9"><a href="#cb7-9"></a>                 ,<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="st">&quot;70&quot;</span>]]]]</span>
+<span id="cb7-10"><a href="#cb7-10"></a>λ<span class="op">&gt;</span> <span class="op">:</span>{</span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="op">|</span> <span class="kw">let</span> foo1 <span class="ot">=</span> \x <span class="ot">-&gt;</span> [x<span class="op">*</span><span class="dv">2</span>,x<span class="op">+</span><span class="dv">20</span>]</span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="op">|</span>     foo2 <span class="ot">=</span> \x <span class="ot">-&gt;</span> [<span class="fu">show</span> x]</span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="op">|</span> <span class="kw">in</span> [<span class="dv">10</span>] <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo1 <span class="op">&gt;&gt;=</span> foo2</span>
+<span id="cb7-14"><a href="#cb7-14"></a><span class="op">|</span> <span class="op">:</span>}</span>
+<span id="cb7-15"><a href="#cb7-15"></a>[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]</span></code></pre></div>
 <p>You can observe some similiarity between list monad and <code>Free []</code> monad. The intuition is <strong><code>Free []</code> monad seems to be a list monad but without <code>concat</code></strong>.</p>
 <h1 id="retract-and-liftf"><code>retract</code> and <code>liftF</code></h1>
 <p>The document says “<code>retract</code> is the left inverse of <code>lift</code> and <code>liftF</code>”. So we explore <code>liftF</code> first.</p>
 <p><code>liftF</code> is “A version of lift that can be used with just a Functor for f.” I'm not sure about this, but we can get started from another clue: the type signature <code>liftF :: (Functor f, MonadFree f m) =&gt; f a -&gt; m a</code>.</p>
 <p>We choose to stick to our simplification: <code>f = []</code>, so we need to find a suitable <code>m</code> that is an instance of <code>MonadFree [] m</code>.</p>
 <p>And this one looks promising:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">MonadFree</span> f (<span class="dt">Free</span> f)</code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a><span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">MonadFree</span> f (<span class="dt">Free</span> f)</span></code></pre></div>
 <p>So we can let <code>m = Free f</code>, which gives us the simplified type signature: <code>liftF :: [a] -&gt; Free [] a</code>. We can guess that <strong><code>liftF</code> lifts functors into free monads</strong>. To confirm about this, let's try to lift some functors:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v7 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span>
-v7 <span class="fu">=</span> liftF [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">8</span>]
-
-<span class="ot">v8 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-v8 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-
-<span class="ot">v9 ::</span> <span class="dt">Free</span> ((<span class="ot">-&gt;</span>) <span class="dt">Int</span>) <span class="dt">Int</span>
-v9 <span class="fu">=</span> liftF (<span class="fu">+</span> <span class="dv">10</span>)</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1"></a><span class="ot">v7 ::</span> <span class="dt">Free</span> [] <span class="dt">Int</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>v7 <span class="ot">=</span> liftF [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">8</span>]</span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="ot">v8 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a>v8 <span class="ot">=</span> liftF <span class="op">$</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="ot">v9 ::</span> <span class="dt">Free</span> ((<span class="ot">-&gt;</span>) <span class="dt">Int</span>) <span class="dt">Int</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a>v9 <span class="ot">=</span> liftF (<span class="op">+</span> <span class="dv">10</span>)</span></code></pre></div>
 <p>I don't know if there is an easy way of observing <code>v9</code>, for now we just print <code>v7</code> and <code>v8</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v7
-<span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">1</span>,<span class="dt">Pure</span> <span class="dv">2</span>,<span class="dt">Pure</span> <span class="dv">3</span>,<span class="dt">Pure</span> <span class="dv">4</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>]
-λ<span class="fu">&gt;</span> v8
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1"></a>λ<span class="op">&gt;</span> v7</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="dt">Free</span> [<span class="dt">Pure</span> <span class="dv">1</span>,<span class="dt">Pure</span> <span class="dv">2</span>,<span class="dt">Pure</span> <span class="dv">3</span>,<span class="dt">Pure</span> <span class="dv">4</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>,<span class="dt">Pure</span> <span class="dv">8</span>]</span>
+<span id="cb10-3"><a href="#cb10-3"></a>λ<span class="op">&gt;</span> v8</span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Foo&quot;</span>))</span></code></pre></div>
 <p>Now we know we can lift any functors, so <strong>we can construct <code>Free f a</code> not only from <code>Pure</code> and <code>Free</code>, but also directly from functors.</strong></p>
 <p>Now think about simplified type signature of <code>retract :: Free [] a -&gt; [a]</code>. <strong>it is the reverse of <code>liftF</code></strong>. Let's have a try in code:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v10 ::</span> [<span class="dt">Int</span>]
-v10 <span class="fu">=</span> retract v3
-
-<span class="ot">v11 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-v11 <span class="fu">=</span> retract v8
-
-<span class="ot">v12 ::</span> [<span class="dt">String</span>]
-v12 <span class="fu">=</span> retract v4
-
-<span class="ot">v13 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
-v13 <span class="fu">=</span> retract v9</code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1"></a><span class="ot">v10 ::</span> [<span class="dt">Int</span>]</span>
+<span id="cb11-2"><a href="#cb11-2"></a>v10 <span class="ot">=</span> retract v3</span>
+<span id="cb11-3"><a href="#cb11-3"></a></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="ot">v11 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb11-5"><a href="#cb11-5"></a>v11 <span class="ot">=</span> retract v8</span>
+<span id="cb11-6"><a href="#cb11-6"></a></span>
+<span id="cb11-7"><a href="#cb11-7"></a><span class="ot">v12 ::</span> [<span class="dt">String</span>]</span>
+<span id="cb11-8"><a href="#cb11-8"></a>v12 <span class="ot">=</span> retract v4</span>
+<span id="cb11-9"><a href="#cb11-9"></a></span>
+<span id="cb11-10"><a href="#cb11-10"></a><span class="ot">v13 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a>v13 <span class="ot">=</span> retract v9</span></code></pre></div>
 <p>Call GHCi for results, now we can observe <code>v9</code> indirectly by using function <code>v13</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v10
-[<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">10</span>]
-λ<span class="fu">&gt;</span> v11
-<span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ<span class="fu">&gt;</span> v12
-[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]
-λ<span class="fu">&gt;</span> map v13 [<span class="dv">1</span><span class="fu">..</span><span class="dv">5</span>]
-[<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1"></a>λ<span class="op">&gt;</span> v10</span>
+<span id="cb12-2"><a href="#cb12-2"></a>[<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">10</span>]</span>
+<span id="cb12-3"><a href="#cb12-3"></a>λ<span class="op">&gt;</span> v11</span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a>λ<span class="op">&gt;</span> v12</span>
+<span id="cb12-6"><a href="#cb12-6"></a>[<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;60&quot;</span>,<span class="st">&quot;120&quot;</span>,<span class="st">&quot;80&quot;</span>,<span class="st">&quot;100&quot;</span>,<span class="st">&quot;70&quot;</span>]</span>
+<span id="cb12-7"><a href="#cb12-7"></a>λ<span class="op">&gt;</span> <span class="fu">map</span> v13 [<span class="dv">1</span><span class="op">..</span><span class="dv">5</span>]</span>
+<span id="cb12-8"><a href="#cb12-8"></a>[<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">13</span>,<span class="dv">14</span>,<span class="dv">15</span>]</span></code></pre></div>
 <p>Therefore <strong><code>retract</code> converts a free monad back to a functor</strong>. (I suspect this conclusion is somehow wrong, but for now I cannot tell what exactly is wrong.)</p>
 <h1 id="iter-and-iterm"><code>iter</code> and <code>iterM</code></h1>
 <p>Use the same trick we've played before, let <code>f = []</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">iter  ::</span>            ([  a] <span class="ot">-&gt;</span>    a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span>   a
-<span class="ot">iterM ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> ([m a] <span class="ot">-&gt;</span> m  a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span> m a</code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1"></a><span class="ot">iter  ::</span>            ([  a] <span class="ot">-&gt;</span>    a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span>   a</span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="ot">iterM ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> ([m a] <span class="ot">-&gt;</span> m  a) <span class="ot">-&gt;</span> <span class="dt">Free</span> [] a <span class="ot">-&gt;</span> m a</span></code></pre></div>
 <p>I guess: <code>iter</code> converts a function who does some sorts of reduction on functors into another function who does the same thing but on free monads, and <code>iterM</code> is the monadic version of <code>iter</code>.</p>
 <p>Let's have a try:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v14 ::</span> <span class="dt">Int</span>
-v14 <span class="fu">=</span> iter sum v3
-
-<span class="ot">foo3 ::</span> [<span class="dt">IO</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span>
-foo3 ms <span class="fu">=</span> sum <span class="ot">`fmap`</span> sequence ms
-
-<span class="ot">v15 ::</span> <span class="dt">IO</span> <span class="dt">Int</span>
-v15 <span class="fu">=</span> iterM foo3 v7</code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1"></a><span class="ot">v14 ::</span> <span class="dt">Int</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>v14 <span class="ot">=</span> iter <span class="fu">sum</span> v3</span>
+<span id="cb14-3"><a href="#cb14-3"></a></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="ot">foo3 ::</span> [<span class="dt">IO</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a>foo3 ms <span class="ot">=</span> <span class="fu">sum</span> <span class="ot">`fmap`</span> <span class="fu">sequence</span> ms</span>
+<span id="cb14-6"><a href="#cb14-6"></a></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="ot">v15 ::</span> <span class="dt">IO</span> <span class="dt">Int</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a>v15 <span class="ot">=</span> iterM foo3 v7</span></code></pre></div>
 <p>And look at GHCi:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v14
-<span class="dv">30</span>
-λ<span class="fu">&gt;</span> v15
-<span class="dv">34</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1"></a>λ<span class="op">&gt;</span> v14</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="dv">30</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>λ<span class="op">&gt;</span> v15</span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="dv">34</span></span></code></pre></div>
 <p>Maybe I can say that <strong><code>iter</code> and <code>iterM</code> lift reduction (for functors) into free monads</strong></p>
 <h1 id="hoistfree"><code>hoistFree</code></h1>
 <p>The type signature contains <code>forall</code>, but I think it's fine to just ignore that part. As we are just trying to get things work:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">hoistFree ::</span> <span class="dt">Functor</span> g <span class="ot">=&gt;</span> (f a <span class="ot">-&gt;</span> g a) <span class="ot">-&gt;</span> <span class="dt">Free</span> f b <span class="ot">-&gt;</span> <span class="dt">Free</span> g b</code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1"></a><span class="ot">hoistFree ::</span> <span class="dt">Functor</span> g <span class="ot">=&gt;</span> (f a <span class="ot">-&gt;</span> g a) <span class="ot">-&gt;</span> <span class="dt">Free</span> f b <span class="ot">-&gt;</span> <span class="dt">Free</span> g b</span></code></pre></div>
 <p>I guess <strong><code>hoistFree</code> lift a conversion between functors into a conversion between free monads.</strong></p>
 <p>I know list and <code>Maybe</code> are good friends:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Maybe</span>
-<span class="ot">v16 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span>
-v16 <span class="fu">=</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-
-<span class="ot">v17 ::</span> [<span class="dt">String</span>]
-v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeToList <span class="fu">$</span> liftF v16</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">import</span> <span class="dt">Data.Maybe</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="ot">v16 ::</span> <span class="dt">Maybe</span> <span class="dt">String</span></span>
+<span id="cb17-3"><a href="#cb17-3"></a>v16 <span class="ot">=</span> <span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span></span>
+<span id="cb17-4"><a href="#cb17-4"></a></span>
+<span id="cb17-5"><a href="#cb17-5"></a><span class="ot">v17 ::</span> [<span class="dt">String</span>]</span>
+<span id="cb17-6"><a href="#cb17-6"></a>v17 <span class="ot">=</span> retract <span class="op">$</span> hoistFree maybeToList <span class="op">$</span> liftF v16</span></code></pre></div>
 <p>Look at GHCi, we should observe the conversion from <code>Maybe String</code> to <code>[String]</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v16
-<span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span>
-λ<span class="fu">&gt;</span> v17
-[<span class="st">&quot;Foo&quot;</span>]</code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1"></a>λ<span class="op">&gt;</span> v16</span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="dt">Just</span> <span class="st">&quot;Foo&quot;</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a>λ<span class="op">&gt;</span> v17</span>
+<span id="cb18-4"><a href="#cb18-4"></a>[<span class="st">&quot;Foo&quot;</span>]</span></code></pre></div>
 <h1 id="pure-and-_free"><code>_Pure</code> and <code>_Free</code></h1>
 <p>The type signatures of these two functions are really long, but don't be afraid, we still have some clue:</p>
 <ul>
@@ -219,54 +219,54 @@ v17 <span class="fu">=</span> retract <span class="fu">$</span> hoistFree maybeT
 <li>Ignore <code>forall</code> parts</li>
 </ul>
 <p>We end up with:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">_<span class="dt">Pure</span><span class="ot"> ::</span> (            a <span class="ot">-&gt;</span> [           a])
-      <span class="ot">-&gt;</span> ( <span class="dt">Free</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> a])
-_<span class="dt">Free</span><span class="ot"> ::</span> ((<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)) <span class="ot">-&gt;</span> [<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)])
-      <span class="ot">-&gt;</span> (       (<span class="dt">Free</span> <span class="dt">Maybe</span> a)  <span class="ot">-&gt;</span> [       <span class="dt">Free</span> <span class="dt">Maybe</span> a ])</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1"></a><span class="ot">_Pure ::</span> (            a <span class="ot">-&gt;</span> [           a])</span>
+<span id="cb19-2"><a href="#cb19-2"></a>      <span class="ot">-&gt;</span> ( <span class="dt">Free</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> a])</span>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="ot">_Free ::</span> ((<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)) <span class="ot">-&gt;</span> [<span class="dt">Maybe</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> a)])</span>
+<span id="cb19-4"><a href="#cb19-4"></a>      <span class="ot">-&gt;</span> (       (<span class="dt">Free</span> <span class="dt">Maybe</span> a)  <span class="ot">-&gt;</span> [       <span class="dt">Free</span> <span class="dt">Maybe</span> a ])</span></code></pre></div>
 <p>I really can't figure out what these functions do, but I can still use it by feeding it with values of suitable type.</p>
 <p>So for the following part of this section, I provide codes and outputs without explanation.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v18 ::</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>]
-v18 <span class="fu">=</span> _<span class="dt">Pure</span> (<span class="fu">:</span>[]) (liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="st">&quot;Haskell&quot;</span>)
-
-<span class="ot">v19 ::</span> [<span class="dt">String</span>]
-v19 <span class="fu">=</span> mapMaybe retract v18
-
-<span class="co">-- f = Maybe</span>
-<span class="co">-- p = (-&gt;)</span>
-<span class="co">-- m = IO</span>
-<span class="co">-- _Free :: (Maybe (Free Maybe a) -&gt; IO (Maybe (Free Maybe a)))</span>
-<span class="co">--       -&gt; (       Free Maybe a  -&gt; IO        (Free Maybe a) )</span>
-<span class="ot">v20 ::</span> <span class="dt">IO</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>)
-v20 <span class="fu">=</span> _<span class="dt">Free</span> return (liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">123456</span>)
-
-<span class="ot">v21 ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> <span class="dt">Int</span>)
-v21 <span class="fu">=</span> retract <span class="ot">`fmap`</span> v20</code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1"></a><span class="ot">v18 ::</span> [<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">String</span>]</span>
+<span id="cb20-2"><a href="#cb20-2"></a>v18 <span class="ot">=</span> _Pure (<span class="op">:</span>[]) (liftF <span class="op">$</span> <span class="dt">Just</span> <span class="st">&quot;Haskell&quot;</span>)</span>
+<span id="cb20-3"><a href="#cb20-3"></a></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="ot">v19 ::</span> [<span class="dt">String</span>]</span>
+<span id="cb20-5"><a href="#cb20-5"></a>v19 <span class="ot">=</span> mapMaybe retract v18</span>
+<span id="cb20-6"><a href="#cb20-6"></a></span>
+<span id="cb20-7"><a href="#cb20-7"></a><span class="co">-- f = Maybe</span></span>
+<span id="cb20-8"><a href="#cb20-8"></a><span class="co">-- p = (-&gt;)</span></span>
+<span id="cb20-9"><a href="#cb20-9"></a><span class="co">-- m = IO</span></span>
+<span id="cb20-10"><a href="#cb20-10"></a><span class="co">-- _Free :: (Maybe (Free Maybe a) -&gt; IO (Maybe (Free Maybe a)))</span></span>
+<span id="cb20-11"><a href="#cb20-11"></a><span class="co">--       -&gt; (       Free Maybe a  -&gt; IO        (Free Maybe a) )</span></span>
+<span id="cb20-12"><a href="#cb20-12"></a><span class="ot">v20 ::</span> <span class="dt">IO</span> (<span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>)</span>
+<span id="cb20-13"><a href="#cb20-13"></a>v20 <span class="ot">=</span> _Free <span class="fu">return</span> (liftF <span class="op">$</span> <span class="dt">Just</span> <span class="dv">123456</span>)</span>
+<span id="cb20-14"><a href="#cb20-14"></a></span>
+<span id="cb20-15"><a href="#cb20-15"></a><span class="ot">v21 ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> <span class="dt">Int</span>)</span>
+<span id="cb20-16"><a href="#cb20-16"></a>v21 <span class="ot">=</span> retract <span class="ot">`fmap`</span> v20</span></code></pre></div>
 <p>GHCi:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v18
-[<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Haskell&quot;</span>))]
-λ<span class="fu">&gt;</span> v19
-[<span class="st">&quot;Haskell&quot;</span>]
-λ<span class="fu">&gt;</span> v20
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">123456</span>))
-λ<span class="fu">&gt;</span> v21
-<span class="dt">Just</span> <span class="dv">123456</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1"></a>λ<span class="op">&gt;</span> v18</span>
+<span id="cb21-2"><a href="#cb21-2"></a>[<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="st">&quot;Haskell&quot;</span>))]</span>
+<span id="cb21-3"><a href="#cb21-3"></a>λ<span class="op">&gt;</span> v19</span>
+<span id="cb21-4"><a href="#cb21-4"></a>[<span class="st">&quot;Haskell&quot;</span>]</span>
+<span id="cb21-5"><a href="#cb21-5"></a>λ<span class="op">&gt;</span> v20</span>
+<span id="cb21-6"><a href="#cb21-6"></a><span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">123456</span>))</span>
+<span id="cb21-7"><a href="#cb21-7"></a>λ<span class="op">&gt;</span> v21</span>
+<span id="cb21-8"><a href="#cb21-8"></a><span class="dt">Just</span> <span class="dv">123456</span></span></code></pre></div>
 <h1 id="wrap-method"><code>wrap</code> method</h1>
 <p>This is a method defined for <code>MonadFree</code>s, the document says <strong>“Add a layer.”</strong>, let's see it in action:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v22 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-v22 <span class="fu">=</span> liftF <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">10</span>
-
-<span class="ot">v23 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-v23 <span class="fu">=</span> wrap (<span class="dt">Just</span> v22)
-
-<span class="ot">v24 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-v24 <span class="fu">=</span> wrap (<span class="dt">Just</span> v23)</code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1"></a><span class="ot">v22 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>v22 <span class="ot">=</span> liftF <span class="op">$</span> <span class="dt">Just</span> <span class="dv">10</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a></span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="ot">v23 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb22-5"><a href="#cb22-5"></a>v23 <span class="ot">=</span> wrap (<span class="dt">Just</span> v22)</span>
+<span id="cb22-6"><a href="#cb22-6"></a></span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="ot">v24 ::</span> <span class="dt">Free</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb22-8"><a href="#cb22-8"></a>v24 <span class="ot">=</span> wrap (<span class="dt">Just</span> v23)</span></code></pre></div>
 <p>GHCi:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v22
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))
-λ<span class="fu">&gt;</span> v23
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))
-λ<span class="fu">&gt;</span> v24
-<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1"></a>λ<span class="op">&gt;</span> v22</span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))</span>
+<span id="cb23-3"><a href="#cb23-3"></a>λ<span class="op">&gt;</span> v23</span>
+<span id="cb23-4"><a href="#cb23-4"></a><span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))</span>
+<span id="cb23-5"><a href="#cb23-5"></a>λ<span class="op">&gt;</span> v24</span>
+<span id="cb23-6"><a href="#cb23-6"></a><span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Free</span> (<span class="dt">Just</span> (<span class="dt">Pure</span> <span class="dv">10</span>))))))</span></code></pre></div>
 <h1 id="call-it-a-day">Call it a day</h1>
 <p>This is the first time I attempted to do a “type-tetris”, although I still don't know what is free monad, but I do get some intuitions by using the functions provided. So let's call it a day.</p>
 </div>

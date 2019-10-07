@@ -89,19 +89,19 @@
 <li><p>For <code>second</code>, we want type <code>d = a</code>, and the return value should be of type <code>(c,b)</code></p></li>
 </ul>
 <p>Put them together, we end up with type signature for <code>first</code> and <code>second</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
-<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1"></a><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</span></code></pre></div>
 <p>Introduce <code>f</code> and <code>(x,y)</code> for two arguments, and the implementation is straightforward:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)
-first  f (x,y) <span class="fu">=</span> (f x, y)
-
-<span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)
-second f (x,y) <span class="fu">=</span> (x, f y)</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="ot">first  ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a,d) <span class="ot">-&gt;</span> (b,d)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>first  f (x,y) <span class="ot">=</span> (f x, y)</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="ot">second ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c,a) <span class="ot">-&gt;</span> (c,b)</span>
+<span id="cb2-5"><a href="#cb2-5"></a>second f (x,y) <span class="ot">=</span> (x, f y)</span></code></pre></div>
 <p>Let's bring up GHCi for some tests:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span>
-(<span class="dv">1</span>,<span class="st">&quot;bar&quot;</span>)
-λ<span class="fu">&gt;</span> second (<span class="fu">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span>
-(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a>λ<span class="op">&gt;</span> first (<span class="fu">const</span> <span class="dv">1</span>) (<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>) <span class="co">-- (1, &quot;bar&quot;)</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>(<span class="dv">1</span>,<span class="st">&quot;bar&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>λ<span class="op">&gt;</span> second (<span class="op">*</span> <span class="dv">20</span>) (<span class="dt">Just</span> <span class="dv">1</span>, <span class="dv">1</span>) <span class="co">-- (Just 1, 20)</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>(<span class="dt">Just</span> <span class="dv">1</span>,<span class="dv">20</span>)</span></code></pre></div>
 <h1 id="editing-a-function">Editing a function</h1>
 <p>There's two way of editing a function: we can either modify the return value (the <code>result</code> combinator), or modify the argument (the <code>argument</code> combinator).</p>
 <h2 id="the-result-combinator">the <code>result</code> combinator</h2>
@@ -112,27 +112,27 @@ second f (x,y) <span class="fu">=</span> (x, f y)</code></pre></div>
 <li>We want to modify on the return value of <code>g</code>, therefore <code>d = a</code>.</li>
 <li>Then the resulting function should be of type <code>c -&gt; b</code></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</code></pre></div>
-<p>We know that <code>-&gt;</code> is right-associative, (e.g. <code>p -&gt; q -&gt; r</code> and <code>p -&gt; (q -&gt; r)</code> are equivalent) so we can also think <code>result</code> as a function that accepts 3 arguments, and its type signature becomes:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> b)</span></code></pre></div>
+<p>We know that <code>-&gt;</code> is right-associative, (e.g. <code>p -&gt; q -&gt; r</code> and <code>p -&gt; (q -&gt; r)</code> are equivalent) so we can also think <code>result</code> as a function that accepts 3 arguments, and its type signature becomes:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</span></code></pre></div>
 <p>Introduce <code>f</code> <code>g</code> <code>x</code> for these 3 arguments, and we want a value of type <code>b</code>.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</span>
+<span id="cb6-2"><a href="#cb6-2"></a>result f g x <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <ul>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li>To produce a value of <code>a</code>, we might need <code>g :: c -&gt; a</code>.</li>
 <li><code>x</code> is of type <code>c</code></li>
 </ul>
 <p>Chaining these facts together, we yield the implementation of <code>result</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result f g x <span class="fu">=</span> f (g x)</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</span>
+<span id="cb7-2"><a href="#cb7-2"></a>result f g x <span class="ot">=</span> f (g x)</span></code></pre></div>
 <p>This is exactly the definition of <a href="http://hackage.haskell.org/package/base-4.6.0.1/docs/src/GHC-Base.html#."><code>(.)</code></a>, function composition.</p>
 <p>So we end up with:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b
-result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a><span class="ot">result ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (c <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> b</span>
+<span id="cb8-2"><a href="#cb8-2"></a>result <span class="ot">=</span> (<span class="op">.</span>)</span></code></pre></div>
 <p>Test it:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> result (<span class="fu">+</span><span class="dv">2</span>) (<span class="fu">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span>
-<span class="dv">7</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1"></a>λ<span class="op">&gt;</span> result (<span class="op">+</span><span class="dv">2</span>) (<span class="op">*</span><span class="dv">5</span>) <span class="dv">1</span> <span class="co">-- 1 * 5 + 2 = 7</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="dv">7</span></span></code></pre></div>
 <h2 id="the-argument-combinator">the <code>argument</code> combinator</h2>
 <p>Use the same approach, let’s implement <code>argument</code> combinator:</p>
 <ul>
@@ -142,16 +142,16 @@ result <span class="fu">=</span> (<span class="fu">.</span>)</code></pre></div>
 <li>the resulting function should be of type <code>a -&gt; d</code>.</li>
 </ul>
 <p>Write down the type signature, introduce <code>f</code>, <code>g</code>, <code>x</code>, the goal is to produce a value of type <code>d</code></p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1"></a><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d</span>
+<span id="cb10-2"><a href="#cb10-2"></a>argument f g x <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <ul>
 <li>To produce a value of <code>d</code>, we might need <code>g :: b -&gt; d</code>.</li>
 <li>To produce a value of <code>b</code>, we might need <code>f :: a -&gt; b</code>.</li>
 <li><code>x</code> is of type <code>a</code></li>
 </ul>
 <p>Therefore the definition of <code>argument</code> is:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-argument f g x <span class="fu">=</span> g (f x)</code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1"></a><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d</span>
+<span id="cb11-2"><a href="#cb11-2"></a>argument f g x <span class="ot">=</span> g (f x)</span></code></pre></div>
 <p>To simplify this, we do some transformations:</p>
 <pre><code>  g (f x)
 &gt; (g . f) x           -- definition of (.)
@@ -160,12 +160,12 @@ argument f g x <span class="fu">=</span> g (f x)</code></pre></div>
 &gt; ((flip (.)) f g) x  -- flip
 &gt; flip (.) f g x      -- rule of function application</code></pre>
 <p>Finally:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d
-<span class="co">-- point-free style of: argument f g x = flip (.) f g x</span>
-argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1"></a><span class="ot">argument ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> d) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> d</span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="co">-- point-free style of: argument f g x = flip (.) f g x</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a>argument <span class="ot">=</span> <span class="fu">flip</span> (<span class="op">.</span>)</span></code></pre></div>
 <p>Test it:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> argument show (\x <span class="ot">-&gt;</span> x <span class="fu">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span>
-<span class="st">&quot;2048!&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1"></a>λ<span class="op">&gt;</span> argument <span class="fu">show</span> (\x <span class="ot">-&gt;</span> x <span class="op">++</span> <span class="st">&quot;!&quot;</span>) <span class="dv">2048</span> <span class="co">-- 2048!</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="st">&quot;2048!&quot;</span></span></code></pre></div>
 <h1 id="walking-into-data">Walking into data</h1>
 <p>For now we have <code>first</code> and <code>second</code> to work with pairs, and <code>argument</code> and <code>result</code> with functions, but sometimes we want to go deeper inside data, say:</p>
 <ul>
@@ -174,24 +174,24 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 </ul>
 <p>Here I try to give some explanation of how to do this.</p>
 <h2 id="goal-1">Goal 1</h2>
-<p>To modify <code>d</code> in <code>(a,(c,d))</code>, that means we need to first focus on <code>(c,d)</code>, this can be achieved by <code>second</code>, let’s pass a const function <code>const &quot;Focus&quot;</code> to <code>second</code>, so we know we are focusing on which portion of the data:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))
-λ<span class="fu">&gt;</span> <span class="kw">let</span> toFocus <span class="fu">=</span> const <span class="st">&quot;Focus&quot;</span>
-λ<span class="fu">&gt;</span> second toFocus d1
-(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</code></pre></div>
+<p>To modify <code>d</code> in <code>(a,(c,d))</code>, that means we need to first focus on <code>(c,d)</code>, this can be achieved by <code>second</code>, let’s pass a const function <code>const "Focus"</code> to <code>second</code>, so we know we are focusing on which portion of the data:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d1 <span class="ot">=</span> (<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</span>
+<span id="cb15-2"><a href="#cb15-2"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> toFocus <span class="ot">=</span> <span class="fu">const</span> <span class="st">&quot;Focus&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>λ<span class="op">&gt;</span> second toFocus d1</span>
+<span id="cb15-4"><a href="#cb15-4"></a>(<span class="dv">7</span>,<span class="st">&quot;Focus&quot;</span>)</span></code></pre></div>
 <p>We now know that missing <code>(2,1)</code> is passed to <code>toFocus</code>, we can use a lambda expression to capture it:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1
-(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1"></a>λ<span class="op">&gt;</span> second (\x <span class="ot">-&gt;</span> x) d1</span>
+<span id="cb16-2"><a href="#cb16-2"></a>(<span class="dv">7</span>,(<span class="dv">2</span>,<span class="dv">1</span>))</span></code></pre></div>
 <p>Let's do something more interesting:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="fu">=</span> x <span class="kw">in</span> (a<span class="fu">+</span><span class="dv">1</span>,b,b)) d1
-(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1"></a>λ<span class="op">&gt;</span> second (\x <span class="ot">-&gt;</span> <span class="kw">let</span> (a,b) <span class="ot">=</span> x <span class="kw">in</span> (a<span class="op">+</span><span class="dv">1</span>,b,b)) d1</span>
+<span id="cb17-2"><a href="#cb17-2"></a>(<span class="dv">7</span>,(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">1</span>))</span></code></pre></div>
 <p>The observation is: inside the body of lambda expression <code>\x -&gt; ...</code>, we can do something to <code>(2,1)</code>. That means we can apply semantic editor combinators on it!</p>
 <p>Now assume we are dealing with <code>(2,1)</code>, to reach the goal, we apply <code>const 5</code> to its <code>fst</code> part:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> first (const <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)
-(<span class="dv">5</span>,<span class="dv">1</span>)</code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1"></a>λ<span class="op">&gt;</span> first (<span class="fu">const</span> <span class="dv">5</span>) (<span class="dv">2</span>,<span class="dv">1</span>)</span>
+<span id="cb18-2"><a href="#cb18-2"></a>(<span class="dv">5</span>,<span class="dv">1</span>)</span></code></pre></div>
 <p>Now replace the body of <code>\x -&gt; ...</code> with what we want:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> second (\x <span class="ot">-&gt;</span> first (const <span class="dv">5</span>) x) d1
-(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1"></a>λ<span class="op">&gt;</span> second (\x <span class="ot">-&gt;</span> first (<span class="fu">const</span> <span class="dv">5</span>) x) d1</span>
+<span id="cb19-2"><a href="#cb19-2"></a>(<span class="dv">7</span>,(<span class="dv">5</span>,<span class="dv">1</span>))</span></code></pre></div>
 <p>Done!</p>
 <h2 id="some-intuition">Some intuition</h2>
 <p>Let's not hurry to Goal 2, I’ll show you some transformations:</p>
@@ -200,33 +200,33 @@ argument <span class="fu">=</span> flip (<span class="fu">.</span>)</code></pre>
 &gt; (second (first (const 5))) d1       -- rule of function application
 &gt; ((second . first) (const 5)) d1     -- definition of (.)</code></pre>
 <p>I don’t simplify it to <code>(second . first) (const 5) d1</code> on purpose, and I’m going to show you why.</p>
-<p>It might not be straightforward at first glance, since function composition is usually “right to left”, that is, <code>(g . f)</code> means “first apply <code>f</code>, on its result, apply <code>g</code>. But here, <code>second . first</code> can be read as”walk to the <code>snd</code> part, and then <code>fst</code> part of it“.</p>
+<p>It might not be straightforward at first glance, since function composition is usually “right to left”, that is, <code>(g . f)</code> means “first apply <code>f</code>, on its result, apply <code>g</code>. But here, <code>second . first</code> can be read as”walk to the <code>snd</code> part, and then <code>fst</code> part of it".</p>
 <p>My explanation is: <strong>the function does compose from right to left, but what’s “carrying” with the composition is not the data</strong>.</p>
 <p>The observation is: no matter how many functions are composed together, the resulting function just takes one argument:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> u <span class="fu">=</span> undefined
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u
-u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
-u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u
-u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span> u <span class="fu">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> u <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb21-2"><a href="#cb21-2"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t u <span class="op">.</span> u</span>
+<span id="cb21-3"><a href="#cb21-3"></a>u <span class="op">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</span>
+<span id="cb21-4"><a href="#cb21-4"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span> u</span>
+<span id="cb21-5"><a href="#cb21-5"></a>u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</span>
+<span id="cb21-6"><a href="#cb21-6"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span> u</span>
+<span id="cb21-7"><a href="#cb21-7"></a>u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span> u <span class="op">.</span><span class="ot"> u ::</span> a <span class="ot">-&gt;</span> c</span></code></pre></div>
 <p>So what is the argument taken by this resulting function? In our Goal 1, it is <code>const 5</code>, the “how we modify it” part. So despite that <code>(second . first) (const 5) d1</code> is simple, to understand it, what you really need would be: <code>((second . first) (const 5)) d1</code></p>
 <p>The observation is: <strong>functions are composed from right to left and the mutator is buried more deeply as the composition goes</strong>.</p>
 <p>To see this, let's just pick up combinators randomly to form a chain of function composition, and check its type:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t first (const <span class="dv">5</span>)
-first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (a, d) <span class="ot">-&gt;</span> (b, d)
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-(second <span class="fu">.</span> first) (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, (a, d)) <span class="ot">-&gt;</span> (c, (b, d))
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t (result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-(result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-<span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c <span class="ot">-&gt;</span> (c1, (a, d))) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> (c1, (b, d))
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t (second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-(second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-<span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (a, d))) <span class="ot">-&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (b, d)))
-λ<span class="fu">&gt;</span> <span class="fu">:</span>t (first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-(first <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> second <span class="fu">.</span> first) (const <span class="dv">5</span>)
-<span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span>
-     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t first (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-2"><a href="#cb22-2"></a>first (<span class="fu">const</span> <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (a, d) <span class="ot">-&gt;</span> (b, d)</span>
+<span id="cb22-3"><a href="#cb22-3"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t (second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-4"><a href="#cb22-4"></a>(second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)<span class="ot"> ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, (a, d)) <span class="ot">-&gt;</span> (c, (b, d))</span>
+<span id="cb22-5"><a href="#cb22-5"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t (result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-6"><a href="#cb22-6"></a>(result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c <span class="ot">-&gt;</span> (c1, (a, d))) <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> (c1, (b, d))</span>
+<span id="cb22-8"><a href="#cb22-8"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t (second <span class="op">.</span> result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-9"><a href="#cb22-9"></a>(second <span class="op">.</span> result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-10"><a href="#cb22-10"></a><span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (a, d))) <span class="ot">-&gt;</span> (c, c1 <span class="ot">-&gt;</span> (c2, (b, d)))</span>
+<span id="cb22-11"><a href="#cb22-11"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t (first <span class="op">.</span> second <span class="op">.</span> result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-12"><a href="#cb22-12"></a>(first <span class="op">.</span> second <span class="op">.</span> result <span class="op">.</span> second <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb22-13"><a href="#cb22-13"></a><span class="ot">  ::</span> <span class="dt">Num</span> b <span class="ot">=&gt;</span></span>
+<span id="cb22-14"><a href="#cb22-14"></a>     ((c, c1 <span class="ot">-&gt;</span> (c2, (a, d1))), d) <span class="ot">-&gt;</span> ((c, c1 <span class="ot">-&gt;</span> (c2, (b, d1))), d)</span></code></pre></div>
 <p>Reading the composition from right to left, <strong>we are constructing / definiting the “shape” of the data this combinator would like to work on</strong>. In contrast, reading from left to right, <strong>we are deconstructing the data until we reach for the position that we want to modify</strong>. These two views does not conflict with each other.</p>
 <p>Therefore, IMHO, when we are thinking about how to walking into the interesting portion, it's helpful thinking about build up combinator from left to right. But to answer the question about why, we should instead read from right to left.</p>
 <p>In addition, here is another interesting observation:</p>
@@ -245,20 +245,20 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>apply <code>(* 2)</code></li>
 </ul>
 <p>Try it out:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> \a <span class="ot">-&gt;</span> (a<span class="fu">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="fu">+</span>b, <span class="dv">1</span>))
-λ<span class="fu">&gt;</span> <span class="kw">let</span> m2 <span class="fu">=</span> (result <span class="fu">.</span> second <span class="fu">.</span> result <span class="fu">.</span> first) (<span class="fu">*</span><span class="dv">2</span>) d2
-λ<span class="fu">&gt;</span> (snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>
-(<span class="dv">30</span>,<span class="dv">1</span>)
-λ<span class="fu">&gt;</span> (snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>
-(<span class="dv">60</span>,<span class="dv">1</span>)
-λ<span class="fu">&gt;</span> fst ((snd (d2 <span class="dv">10</span>)) <span class="dv">20</span>)
-<span class="dv">30</span>
-λ<span class="fu">&gt;</span> fst ((snd (m2 <span class="dv">10</span>)) <span class="dv">20</span>)
-<span class="dv">60</span>
-λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) d2
-<span class="dv">30</span>
-λ<span class="fu">&gt;</span> (fst <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">20</span>) <span class="fu">.</span> snd <span class="fu">.</span> (<span class="fu">$</span> <span class="dv">10</span>)) m2
-<span class="dv">60</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d2 <span class="ot">=</span> \a <span class="ot">-&gt;</span> (a<span class="op">+</span><span class="dv">1</span>, \b <span class="ot">-&gt;</span> (a<span class="op">+</span>b, <span class="dv">1</span>))</span>
+<span id="cb24-2"><a href="#cb24-2"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> m2 <span class="ot">=</span> (result <span class="op">.</span> second <span class="op">.</span> result <span class="op">.</span> first) (<span class="op">*</span><span class="dv">2</span>) d2</span>
+<span id="cb24-3"><a href="#cb24-3"></a>λ<span class="op">&gt;</span> (<span class="fu">snd</span> (d2 <span class="dv">10</span>)) <span class="dv">20</span></span>
+<span id="cb24-4"><a href="#cb24-4"></a>(<span class="dv">30</span>,<span class="dv">1</span>)</span>
+<span id="cb24-5"><a href="#cb24-5"></a>λ<span class="op">&gt;</span> (<span class="fu">snd</span> (m2 <span class="dv">10</span>)) <span class="dv">20</span></span>
+<span id="cb24-6"><a href="#cb24-6"></a>(<span class="dv">60</span>,<span class="dv">1</span>)</span>
+<span id="cb24-7"><a href="#cb24-7"></a>λ<span class="op">&gt;</span> <span class="fu">fst</span> ((<span class="fu">snd</span> (d2 <span class="dv">10</span>)) <span class="dv">20</span>)</span>
+<span id="cb24-8"><a href="#cb24-8"></a><span class="dv">30</span></span>
+<span id="cb24-9"><a href="#cb24-9"></a>λ<span class="op">&gt;</span> <span class="fu">fst</span> ((<span class="fu">snd</span> (m2 <span class="dv">10</span>)) <span class="dv">20</span>)</span>
+<span id="cb24-10"><a href="#cb24-10"></a><span class="dv">60</span></span>
+<span id="cb24-11"><a href="#cb24-11"></a>λ<span class="op">&gt;</span> (<span class="fu">fst</span> <span class="op">.</span> (<span class="op">$</span> <span class="dv">20</span>) <span class="op">.</span> <span class="fu">snd</span> <span class="op">.</span> (<span class="op">$</span> <span class="dv">10</span>)) d2</span>
+<span id="cb24-12"><a href="#cb24-12"></a><span class="dv">30</span></span>
+<span id="cb24-13"><a href="#cb24-13"></a>λ<span class="op">&gt;</span> (<span class="fu">fst</span> <span class="op">.</span> (<span class="op">$</span> <span class="dv">20</span>) <span class="op">.</span> <span class="fu">snd</span> <span class="op">.</span> (<span class="op">$</span> <span class="dv">10</span>)) m2</span>
+<span id="cb24-14"><a href="#cb24-14"></a><span class="dv">60</span></span></code></pre></div>
 <p>Last two programs are just rewriting the two programs right before it, Do you notice the symmetry between <code>fst . ($ 20) . snd . ($ 10)</code> and <code>result . second . result . first</code>?</p>
 <p>I believe this is not an accident, but to explain it might beyond my reach, this is what I have for now:</p>
 <p>With the help of <a href="http://www.haskell.org/haskellwiki/Lambdabot">Lambdabot</a>:</p>
@@ -274,8 +274,8 @@ first (const <span class="dv">5</span>)<span class="ot"> ::</span> <span class="
 <li>resulting data: <code>[b]</code></li>
 </ul>
 <p>and this is exactly <code>map</code>.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
-element <span class="fu">=</span> map</code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1"></a><span class="ot">element ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]</span>
+<span id="cb26-2"><a href="#cb26-2"></a>element <span class="ot">=</span> <span class="fu">map</span></span></code></pre></div>
 <p>Here I show you 3 extra combinators:</p>
 <p><em>inHead</em> modifies the head of a list:</p>
 <ul>
@@ -283,18 +283,18 @@ element <span class="fu">=</span> map</code></pre></div>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inHead f [] <span class="fu">=</span> []
-inHead f (x<span class="fu">:</span>xs) <span class="fu">=</span> f x <span class="fu">:</span> xs</code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1"></a><span class="ot">inHead ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
+<span id="cb27-2"><a href="#cb27-2"></a>inHead f [] <span class="ot">=</span> []</span>
+<span id="cb27-3"><a href="#cb27-3"></a>inHead f (x<span class="op">:</span>xs) <span class="ot">=</span> f x <span class="op">:</span> xs</span></code></pre></div>
 <p><em>inTail</em> modifies the tail of a list:</p>
 <ul>
 <li>how to modify: <code>f :: [a] -&gt; [a]</code></li>
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inTail f [] <span class="fu">=</span> []
-inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class="fu">:</span> f xs</code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1"></a><span class="ot">inTail ::</span> ([a] <span class="ot">-&gt;</span> [a]) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
+<span id="cb28-2"><a href="#cb28-2"></a>inTail f [] <span class="ot">=</span> []</span>
+<span id="cb28-3"><a href="#cb28-3"></a>inTail f (x<span class="op">:</span>xs) <span class="ot">=</span> x <span class="op">:</span> f xs</span></code></pre></div>
 <p><em>inPos</em> modifies the element at a given position:</p>
 <ul>
 <li>we first need the position: <code>Int</code></li>
@@ -302,14 +302,14 @@ inTail f (x<span class="fu">:</span>xs) <span class="fu">=</span> x <span class=
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inPos n f xs
-      <span class="fu">|</span> null xs    <span class="fu">=</span> xs
-      <span class="fu">|</span> n <span class="fu">&lt;</span> <span class="dv">0</span>      <span class="fu">=</span> xs
-      <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">0</span>     <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
-                     <span class="kw">in</span> f y <span class="fu">:</span> ys
-      <span class="fu">|</span> otherwise  <span class="fu">=</span> <span class="kw">let</span> (y<span class="fu">:</span>ys) <span class="fu">=</span> xs
-                     <span class="kw">in</span> y <span class="fu">:</span> inPos (n <span class="fu">-</span> <span class="dv">1</span>) f ys</code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1"></a><span class="ot">inPos ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
+<span id="cb29-2"><a href="#cb29-2"></a>inPos n f xs</span>
+<span id="cb29-3"><a href="#cb29-3"></a>      <span class="op">|</span> <span class="fu">null</span> xs    <span class="ot">=</span> xs</span>
+<span id="cb29-4"><a href="#cb29-4"></a>      <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">0</span>      <span class="ot">=</span> xs</span>
+<span id="cb29-5"><a href="#cb29-5"></a>      <span class="op">|</span> n <span class="op">==</span> <span class="dv">0</span>     <span class="ot">=</span> <span class="kw">let</span> (y<span class="op">:</span>ys) <span class="ot">=</span> xs</span>
+<span id="cb29-6"><a href="#cb29-6"></a>                     <span class="kw">in</span> f y <span class="op">:</span> ys</span>
+<span id="cb29-7"><a href="#cb29-7"></a>      <span class="op">|</span> <span class="fu">otherwise</span>  <span class="ot">=</span> <span class="kw">let</span> (y<span class="op">:</span>ys) <span class="ot">=</span> xs</span>
+<span id="cb29-8"><a href="#cb29-8"></a>                     <span class="kw">in</span> y <span class="op">:</span> inPos (n <span class="op">-</span> <span class="dv">1</span>) f ys</span></code></pre></div>
 <p><em>inSome</em> is like <code>inPos</code>, but modifies multiple positions:</p>
 <ul>
 <li>we first need the indices: <code>[Int]</code></li>
@@ -317,93 +317,93 @@ inPos n f xs
 <li>data to be modified: <code>[a]</code></li>
 <li>resulting data: <code>[a]</code></li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
-inSome ixs f xs <span class="fu">=</span> foldl (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1"></a><span class="ot">inSome ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]</span>
+<span id="cb30-2"><a href="#cb30-2"></a>inSome ixs f xs <span class="ot">=</span> <span class="fu">foldl</span> (\acc i <span class="ot">-&gt;</span> inPos i f acc) xs ixs</span></code></pre></div>
 <p>Some examples:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="fu">..</span><span class="dv">10</span>])
-λ<span class="fu">&gt;</span> (second <span class="fu">.</span> element) (<span class="fu">+</span> <span class="dv">1</span>) d1
-(<span class="st">&quot;foo&quot;</span>,[<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>])
-λ<span class="fu">&gt;</span> (first <span class="fu">.</span> element) ord d1
-([<span class="dv">102</span>,<span class="dv">111</span>,<span class="dv">111</span>],[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inTail) (take <span class="dv">2</span>) d1
-(<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>])
-λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inHead) (<span class="fu">*</span> <span class="dv">200</span>) d1
-(<span class="st">&quot;foo&quot;</span>,[<span class="dv">200</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ<span class="fu">&gt;</span> (second <span class="fu">.</span> inPos <span class="dv">3</span>) (<span class="fu">*</span> <span class="dv">200</span>) d1
-(<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">800</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])
-λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> replicate <span class="dv">3</span> (replicate <span class="dv">4</span> <span class="dv">0</span>)
-λ<span class="fu">&gt;</span> (inPos <span class="dv">1</span> <span class="fu">.</span> inPos <span class="dv">2</span>) (const <span class="dv">255</span>) d2
-[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d1 <span class="ot">=</span> (<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span><span class="op">..</span><span class="dv">10</span>])</span>
+<span id="cb31-2"><a href="#cb31-2"></a>λ<span class="op">&gt;</span> (second <span class="op">.</span> element) (<span class="op">+</span> <span class="dv">1</span>) d1</span>
+<span id="cb31-3"><a href="#cb31-3"></a>(<span class="st">&quot;foo&quot;</span>,[<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">11</span>])</span>
+<span id="cb31-4"><a href="#cb31-4"></a>λ<span class="op">&gt;</span> (first <span class="op">.</span> element) <span class="fu">ord</span> d1</span>
+<span id="cb31-5"><a href="#cb31-5"></a>([<span class="dv">102</span>,<span class="dv">111</span>,<span class="dv">111</span>],[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])</span>
+<span id="cb31-6"><a href="#cb31-6"></a>λ<span class="op">&gt;</span> (second <span class="op">.</span> inTail) (<span class="fu">take</span> <span class="dv">2</span>) d1</span>
+<span id="cb31-7"><a href="#cb31-7"></a>(<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>])</span>
+<span id="cb31-8"><a href="#cb31-8"></a>λ<span class="op">&gt;</span> (second <span class="op">.</span> inHead) (<span class="op">*</span> <span class="dv">200</span>) d1</span>
+<span id="cb31-9"><a href="#cb31-9"></a>(<span class="st">&quot;foo&quot;</span>,[<span class="dv">200</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])</span>
+<span id="cb31-10"><a href="#cb31-10"></a>λ<span class="op">&gt;</span> (second <span class="op">.</span> inPos <span class="dv">3</span>) (<span class="op">*</span> <span class="dv">200</span>) d1</span>
+<span id="cb31-11"><a href="#cb31-11"></a>(<span class="st">&quot;foo&quot;</span>,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">800</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>])</span>
+<span id="cb31-12"><a href="#cb31-12"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d2 <span class="ot">=</span> <span class="fu">replicate</span> <span class="dv">3</span> (<span class="fu">replicate</span> <span class="dv">4</span> <span class="dv">0</span>)</span>
+<span id="cb31-13"><a href="#cb31-13"></a>λ<span class="op">&gt;</span> (inPos <span class="dv">1</span> <span class="op">.</span> inPos <span class="dv">2</span>) (<span class="fu">const</span> <span class="dv">255</span>) d2</span>
+<span id="cb31-14"><a href="#cb31-14"></a>[[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">255</span>,<span class="dv">0</span>],[<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]]</span></code></pre></div>
 <h1 id="walking-into-user-defined-data">Walking into user defined data</h1>
 <p>Suppose user has defined a binary tree:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="fu">=</span> <span class="dt">Node</span> a
-               <span class="fu">|</span> <span class="dt">Tree</span> (<span class="dt">BinTree</span> a) (<span class="dt">BinTree</span> a) a
-                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1"></a><span class="kw">data</span> <span class="dt">BinTree</span> a <span class="ot">=</span> <span class="dt">Node</span> a</span>
+<span id="cb32-2"><a href="#cb32-2"></a>               <span class="op">|</span> <span class="dt">Tree</span> (<span class="dt">BinTree</span> a) (<span class="dt">BinTree</span> a) a</span>
+<span id="cb32-3"><a href="#cb32-3"></a>                 <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>, <span class="dt">Functor</span>)</span></code></pre></div>
 <p>To write a combinator is easy, just follow the pattern <code>&lt;combinator&gt; &lt;mutator&gt; &lt;data&gt; = &lt;modified-data&gt;</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
-treeV f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
-treeV f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> l r (f x)
-
-<span class="ot">treeElement ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> b
-treeElement <span class="fu">=</span> fmap
-
-<span class="ot">treeLeft ::</span> (<span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
-treeLeft f (<span class="dt">Tree</span> l r e) <span class="fu">=</span> <span class="dt">Tree</span> (f l) r e
-treeLeft f r <span class="fu">=</span> r
-
-<span class="ot">treeRight ::</span> (<span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
-treeRight f (<span class="dt">Tree</span> l r e) <span class="fu">=</span> <span class="dt">Tree</span> l (f r) e
-treeRight f r <span class="fu">=</span> r
-
-<span class="ot">treeNonLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
-treeNonLeaf f (<span class="dt">Tree</span> l r e) <span class="fu">=</span> <span class="dt">Tree</span> (treeNonLeaf f l) (treeNonLeaf f r) (f e)
-treeNonLeaf f r <span class="fu">=</span> r
-
-<span class="ot">treeLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a
-treeLeaf f (<span class="dt">Node</span> x) <span class="fu">=</span> <span class="dt">Node</span> (f x)
-treeLeaf f (<span class="dt">Tree</span> l r x) <span class="fu">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1"></a><span class="ot">treeV ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a</span>
+<span id="cb33-2"><a href="#cb33-2"></a>treeV f (<span class="dt">Node</span> x) <span class="ot">=</span> <span class="dt">Node</span> (f x)</span>
+<span id="cb33-3"><a href="#cb33-3"></a>treeV f (<span class="dt">Tree</span> l r x) <span class="ot">=</span> <span class="dt">Tree</span> l r (f x)</span>
+<span id="cb33-4"><a href="#cb33-4"></a></span>
+<span id="cb33-5"><a href="#cb33-5"></a><span class="ot">treeElement ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> b</span>
+<span id="cb33-6"><a href="#cb33-6"></a>treeElement <span class="ot">=</span> <span class="fu">fmap</span></span>
+<span id="cb33-7"><a href="#cb33-7"></a></span>
+<span id="cb33-8"><a href="#cb33-8"></a><span class="ot">treeLeft ::</span> (<span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a</span>
+<span id="cb33-9"><a href="#cb33-9"></a>treeLeft f (<span class="dt">Tree</span> l r e) <span class="ot">=</span> <span class="dt">Tree</span> (f l) r e</span>
+<span id="cb33-10"><a href="#cb33-10"></a>treeLeft f r <span class="ot">=</span> r</span>
+<span id="cb33-11"><a href="#cb33-11"></a></span>
+<span id="cb33-12"><a href="#cb33-12"></a><span class="ot">treeRight ::</span> (<span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a</span>
+<span id="cb33-13"><a href="#cb33-13"></a>treeRight f (<span class="dt">Tree</span> l r e) <span class="ot">=</span> <span class="dt">Tree</span> l (f r) e</span>
+<span id="cb33-14"><a href="#cb33-14"></a>treeRight f r <span class="ot">=</span> r</span>
+<span id="cb33-15"><a href="#cb33-15"></a></span>
+<span id="cb33-16"><a href="#cb33-16"></a><span class="ot">treeNonLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a</span>
+<span id="cb33-17"><a href="#cb33-17"></a>treeNonLeaf f (<span class="dt">Tree</span> l r e) <span class="ot">=</span> <span class="dt">Tree</span> (treeNonLeaf f l) (treeNonLeaf f r) (f e)</span>
+<span id="cb33-18"><a href="#cb33-18"></a>treeNonLeaf f r <span class="ot">=</span> r</span>
+<span id="cb33-19"><a href="#cb33-19"></a></span>
+<span id="cb33-20"><a href="#cb33-20"></a><span class="ot">treeLeaf ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a <span class="ot">-&gt;</span> <span class="dt">BinTree</span> a</span>
+<span id="cb33-21"><a href="#cb33-21"></a>treeLeaf f (<span class="dt">Node</span> x) <span class="ot">=</span> <span class="dt">Node</span> (f x)</span>
+<span id="cb33-22"><a href="#cb33-22"></a>treeLeaf f (<span class="dt">Tree</span> l r x) <span class="ot">=</span> <span class="dt">Tree</span> (treeLeaf f l) (treeLeaf f r) x</span></code></pre></div>
 <p>Here <code>treeElement</code> walks into the data part of each node to do the modification. Since <code>treeElement = fmap</code>, we can generalize <code>element = fmap</code>, to make it work for not only lists and <code>BinTree</code>s, but also any other Functors.</p>
 <p><code>treeLeft</code> and <code>treeRight</code> walks into left subtree and right subtree, respectively. But to target at the value of a <code>BinTree</code>, we need <code>treeV</code>, which takes care of walking into the data field of a tree.</p>
 <p><code>treeNonLeaf</code> and <code>treeLeaf</code> are just like <code>treeElement</code> but works merely on non-leaf nodes and leaf nodes, respectively.</p>
 <p>See them in action:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d1 <span class="fu">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ<span class="fu">&gt;</span> (treeElement <span class="fu">.</span> first) even d1 <span class="co">-- test for each node, if the `fst` part is an even?</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">2</span>)) (<span class="dt">True</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">4</span>)) (<span class="dt">False</span>,<span class="dv">6</span>)
-λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ<span class="fu">&gt;</span> (treeLeft <span class="fu">.</span> treeRight <span class="fu">.</span> treeV <span class="fu">.</span> first) (<span class="fu">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into the right subtree of the left subtree, ..</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">4</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)
-λ<span class="fu">&gt;</span> (treeNonLeaf <span class="fu">.</span> first) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">100</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">100</span>,<span class="dv">6</span>)
-λ<span class="fu">&gt;</span> (treeLeaf <span class="fu">.</span> second) (const <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span>
-<span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d1 <span class="ot">=</span> <span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</span>
+<span id="cb34-2"><a href="#cb34-2"></a>λ<span class="op">&gt;</span> (treeElement <span class="op">.</span> first) <span class="fu">even</span> d1 <span class="co">-- test for each node, if the `fst` part is an even?</span></span>
+<span id="cb34-3"><a href="#cb34-3"></a><span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">2</span>)) (<span class="dt">True</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dt">False</span>,<span class="dv">4</span>)) (<span class="dt">False</span>,<span class="dv">6</span>)</span>
+<span id="cb34-4"><a href="#cb34-4"></a>λ<span class="op">&gt;</span> (treeLeft <span class="op">.</span> treeV <span class="op">.</span> first) (<span class="op">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into left subtree, multiple `fst` part of its value by 4</span></span>
+<span id="cb34-5"><a href="#cb34-5"></a><span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</span>
+<span id="cb34-6"><a href="#cb34-6"></a>λ<span class="op">&gt;</span> (treeLeft <span class="op">.</span> treeRight <span class="op">.</span> treeV <span class="op">.</span> first) (<span class="op">*</span> <span class="dv">4</span>) d1 <span class="co">-- walk into the right subtree of the left subtree, ..</span></span>
+<span id="cb34-7"><a href="#cb34-7"></a><span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">4</span>,<span class="dv">2</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</span>
+<span id="cb34-8"><a href="#cb34-8"></a>λ<span class="op">&gt;</span> (treeNonLeaf <span class="op">.</span> first) (<span class="fu">const</span> <span class="dv">100</span>) d1 <span class="co">-- for each value of the `fst` part of each non-leaf node</span></span>
+<span id="cb34-9"><a href="#cb34-9"></a><span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">1</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">2</span>)) (<span class="dv">100</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">4</span>)) (<span class="dv">100</span>,<span class="dv">6</span>)</span>
+<span id="cb34-10"><a href="#cb34-10"></a>λ<span class="op">&gt;</span> (treeLeaf <span class="op">.</span> second) (<span class="fu">const</span> <span class="dv">100</span>) d1 <span class="co">-- for each value of the `snd` part of each leaf node</span></span>
+<span id="cb34-11"><a href="#cb34-11"></a><span class="dt">Tree</span> (<span class="dt">Tree</span> (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dt">Node</span> (<span class="dv">1</span>,<span class="dv">100</span>)) (<span class="dv">2</span>,<span class="dv">2</span>)) (<span class="dt">Node</span> (<span class="dv">3</span>,<span class="dv">100</span>)) (<span class="dv">5</span>,<span class="dv">6</span>)</span></code></pre></div>
 <h1 id="combining-semantic-editor-combinators">Combining semantic editor combinators</h1>
 <p>The semantic editor combinators can also be chained together.</p>
 <p>Suppose we have some combinators:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> c13 <span class="fu">=</span> (inPos <span class="dv">1</span>) (const <span class="dv">3</span>)
-λ<span class="fu">&gt;</span> <span class="kw">let</span> c05 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">5</span>)
-λ<span class="fu">&gt;</span> <span class="kw">let</span> c06 <span class="fu">=</span> (inPos <span class="dv">0</span>) (const <span class="dv">6</span>)
-λ<span class="fu">&gt;</span> <span class="kw">let</span> cf1 <span class="fu">=</span> first (const <span class="dv">1</span>)</code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> c13 <span class="ot">=</span> (inPos <span class="dv">1</span>) (<span class="fu">const</span> <span class="dv">3</span>)</span>
+<span id="cb35-2"><a href="#cb35-2"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> c05 <span class="ot">=</span> (inPos <span class="dv">0</span>) (<span class="fu">const</span> <span class="dv">5</span>)</span>
+<span id="cb35-3"><a href="#cb35-3"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> c06 <span class="ot">=</span> (inPos <span class="dv">0</span>) (<span class="fu">const</span> <span class="dv">6</span>)</span>
+<span id="cb35-4"><a href="#cb35-4"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> cf1 <span class="ot">=</span> first (<span class="fu">const</span> <span class="dv">1</span>)</span></code></pre></div>
 <p>For a given list, we want to apply <code>c13</code> and <code>c05</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d <span class="fu">=</span> replicate <span class="dv">5</span> <span class="dv">0</span>
-λ<span class="fu">&gt;</span> c06 (c13 d)
-[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]
-λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c13) d
-[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d <span class="ot">=</span> <span class="fu">replicate</span> <span class="dv">5</span> <span class="dv">0</span></span>
+<span id="cb36-2"><a href="#cb36-2"></a>λ<span class="op">&gt;</span> c06 (c13 d)</span>
+<span id="cb36-3"><a href="#cb36-3"></a>[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</span>
+<span id="cb36-4"><a href="#cb36-4"></a>λ<span class="op">&gt;</span> (c06 <span class="op">.</span> c13) d</span>
+<span id="cb36-5"><a href="#cb36-5"></a>[<span class="dv">6</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]</span></code></pre></div>
 <p>So we can use function composition to compose semantic editors:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="kw">let</span> d2 <span class="fu">=</span> (<span class="dv">10</span>,replicate <span class="dv">5</span> <span class="dv">0</span>)
-λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13)) d2
-(<span class="dv">1</span>,[<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
-λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second c13) <span class="fu">.</span> (second c05)) d2
-(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])
-λ<span class="fu">&gt;</span> (cf1 <span class="fu">.</span> (second (c13 <span class="fu">.</span> c05))) d2
-(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb37-1"><a href="#cb37-1"></a>λ<span class="op">&gt;</span> <span class="kw">let</span> d2 <span class="ot">=</span> (<span class="dv">10</span>,<span class="fu">replicate</span> <span class="dv">5</span> <span class="dv">0</span>)</span>
+<span id="cb37-2"><a href="#cb37-2"></a>λ<span class="op">&gt;</span> (cf1 <span class="op">.</span> (second c13)) d2</span>
+<span id="cb37-3"><a href="#cb37-3"></a>(<span class="dv">1</span>,[<span class="dv">0</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</span>
+<span id="cb37-4"><a href="#cb37-4"></a>λ<span class="op">&gt;</span> (cf1 <span class="op">.</span> (second c13) <span class="op">.</span> (second c05)) d2</span>
+<span id="cb37-5"><a href="#cb37-5"></a>(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</span>
+<span id="cb37-6"><a href="#cb37-6"></a>λ<span class="op">&gt;</span> (cf1 <span class="op">.</span> (second (c13 <span class="op">.</span> c05))) d2</span>
+<span id="cb37-7"><a href="#cb37-7"></a>(<span class="dv">1</span>,[<span class="dv">5</span>,<span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>])</span></code></pre></div>
 <p>The last example says “apply <code>1</code>, (back to the top level and then) walk into the <code>snd</code> part, apply <code>c05</code> and then <code>c13</code>”. I think this “distributive property” will make things extremely flexible.</p>
 <p>Since the function composition happens from right to left, if some combinators are trying to modify the same field, the “leftmost” one take effect:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> (c05 <span class="fu">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]
-[<span class="dv">5</span>,<span class="dv">1</span>]
-λ<span class="fu">&gt;</span> (c06 <span class="fu">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]
-[<span class="dv">6</span>,<span class="dv">1</span>]</code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb38-1"><a href="#cb38-1"></a>λ<span class="op">&gt;</span> (c05 <span class="op">.</span> c06) [<span class="dv">0</span>,<span class="dv">1</span>]</span>
+<span id="cb38-2"><a href="#cb38-2"></a>[<span class="dv">5</span>,<span class="dv">1</span>]</span>
+<span id="cb38-3"><a href="#cb38-3"></a>λ<span class="op">&gt;</span> (c06 <span class="op">.</span> c05) [<span class="dv">0</span>,<span class="dv">1</span>]</span>
+<span id="cb38-4"><a href="#cb38-4"></a>[<span class="dv">6</span>,<span class="dv">1</span>]</span></code></pre></div>
 </div>
 
 <br /><br />

@@ -90,7 +90,7 @@
 <li><code>*</code> : a wave source which will disappear at the next moment, producing waves in both directions.</li>
 </ul>
 <p>The simulation of wave propagation will be archieved by continuously printing the next generation of the “world”.</p>
-<p>For example, if we are given a string: <code>&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</code>, the output would be the following:</p>
+<p>For example, if we are given a string: <code>"*  &gt;  *   *  &lt;  **&lt;"</code>, the output would be the following:</p>
 <pre><code>*  &gt;  *   *  &lt;  **&lt;  
  &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;  
   &gt; &lt;&gt;  X  &lt;&gt; &lt;&lt;&lt; &gt;&gt; 
@@ -101,15 +101,15 @@
 ...</code></pre>
 <h1 id="propagation-rules">Propagation Rules</h1>
 <p>I believe it's easy to see the pattern. And you can write a function to describe the rule. At the first glance you might think the state of a fixed position in the “world” only depends on its previous state and the previous states of its neighborhoods. But it turns out the previous state of itself isn't necessary, but we just leave it as an argument (Simply because I think it looks better).</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
-waveRule _ l r
-    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">'X'</span>
-    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">'&gt;'</span>
-    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">'&lt;'</span>
-    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">' '</span>
-    <span class="kw">where</span>
-        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
-        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="ot">waveRule ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>waveRule _ l r</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="op">|</span> fromL <span class="op">&amp;&amp;</span> fromR <span class="ot">=</span> <span class="ch">'X'</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>    <span class="op">|</span> fromL          <span class="ot">=</span> <span class="ch">'&gt;'</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>    <span class="op">|</span> fromR          <span class="ot">=</span> <span class="ch">'&lt;'</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>    <span class="op">|</span> <span class="fu">otherwise</span>      <span class="ot">=</span> <span class="ch">' '</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a>    <span class="kw">where</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>        fromL <span class="ot">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a>        fromR <span class="ot">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></span></code></pre></div>
 <h1 id="first-solution">First Solution</h1>
 <p>(This part is not about zippers or comonads, feel free to skip it) It is not hard to come up with a solution involving only basic list manipulations. I think it would be a good exercise. My solution can be found <a href="https://gist.github.com/Javran/eed695b4f837cc8ea214">here</a>.</p>
 <p>The output should be:</p>
@@ -151,31 +151,31 @@ waveRule _ l r
 <table>
 <thead>
 <tr class="header">
-<th align="left">Stack</th>
-<th align="left">Focus</th>
-<th align="left">Zipper = (Stack,Focus)</th>
+<th>Stack</th>
+<th>Focus</th>
+<th>Zipper = (Stack,Focus)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left"><code>[]</code></td>
-<td align="left"><code>[1,2,3]</code></td>
-<td align="left"><code>([],[1,2,3])</code></td>
+<td><code>[]</code></td>
+<td><code>[1,2,3]</code></td>
+<td><code>([],[1,2,3])</code></td>
 </tr>
 <tr class="even">
-<td align="left"><code>[1:&lt;hole&gt;]</code></td>
-<td align="left"><code>[2,3]</code></td>
-<td align="left"><code>([1],[2,3])</code></td>
+<td><code>[1:&lt;hole&gt;]</code></td>
+<td><code>[2,3]</code></td>
+<td><code>([1],[2,3])</code></td>
 </tr>
 <tr class="odd">
-<td align="left"><code>[2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
-<td align="left"><code>[3]</code></td>
-<td align="left"><code>([2,1],[3])</code></td>
+<td><code>[2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td><code>[3]</code></td>
+<td><code>([2,1],[3])</code></td>
 </tr>
 <tr class="even">
-<td align="left"><code>[3:&lt;hole&gt;, 2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
-<td align="left"><code>[]</code></td>
-<td align="left"><code>([3,2,1],[])</code></td>
+<td><code>[3:&lt;hole&gt;, 2:&lt;hole&gt;, 1:&lt;hole&gt;]</code></td>
+<td><code>[]</code></td>
+<td><code>([3,2,1],[])</code></td>
 </tr>
 </tbody>
 </table>
@@ -192,113 +192,113 @@ waveRule _ l r
 <h1 id="implementation">Implementation</h1>
 <h2 id="zippers">Zippers</h2>
 <p>First let's begin with zipper implementations. Since the world can never be empty, it is totally safe to break the focusing data (<code>[a]</code>) into its components (<code>(a,[a])</code>). By rearranging the order of arguments (<code>([a],[a])</code> … <code>([a],(a,[a]))</code> … <code>LZipper a [a] [a]</code>) we have our final version of <code>LZipper</code> here:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span>
-
-<span class="co">-- | LZipper &lt;current&gt; &lt;left (reversed)&gt; &lt;right&gt;</span>
-<span class="kw">data</span> <span class="dt">LZipper</span> a <span class="fu">=</span> <span class="dt">LZipper</span> a [a] [a]
-    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="ot">{-# LANGUAGE DeriveFunctor #-}</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">-- | LZipper &lt;current&gt; &lt;left (reversed)&gt; &lt;right&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">data</span> <span class="dt">LZipper</span> a <span class="ot">=</span> <span class="dt">LZipper</span> a [a] [a]</span>
+<span id="cb4-5"><a href="#cb4-5"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Functor</span>)</span></code></pre></div>
 <p>Here the old focus would be <code>&lt;current&gt;:&lt;right&gt;</code> but we can break the focusing list to make it looks nicer: now a list zipper in our case consists of three parts, a current focus <code>&lt;current&gt;</code>, everything to the left of it <code>&lt;left (reversed)&gt;</code> and everything to the right of it <code>&lt;right&gt;</code>.</p>
 <p>With the list zipper definition given, it's easy to define basic operations:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | shift left and right</span>
-zipperMoveL,<span class="ot"> zipperMoveR ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
-zipperMoveL (<span class="dt">LZipper</span> a (x<span class="fu">:</span>xs') ys) <span class="fu">=</span> <span class="dt">LZipper</span> x xs' (a<span class="fu">:</span>ys)
-zipperMoveL _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
-zipperMoveR (<span class="dt">LZipper</span> a xs (y<span class="fu">:</span>ys')) <span class="fu">=</span> <span class="dt">LZipper</span> y (a<span class="fu">:</span>xs) ys'
-zipperMoveR _ <span class="fu">=</span> error <span class="st">&quot;Invalid move&quot;</span>
-
-<span class="co">-- | get the current focusing element</span>
-<span class="ot">current ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> a
-current (<span class="dt">LZipper</span> v _ _) <span class="fu">=</span> v</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">-- | shift left and right</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>zipperMoveL,<span class="ot"> zipperMoveR ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a</span>
+<span id="cb5-3"><a href="#cb5-3"></a>zipperMoveL (<span class="dt">LZipper</span> a (x<span class="op">:</span>xs') ys) <span class="ot">=</span> <span class="dt">LZipper</span> x xs' (a<span class="op">:</span>ys)</span>
+<span id="cb5-4"><a href="#cb5-4"></a>zipperMoveL _ <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;Invalid move&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a>zipperMoveR (<span class="dt">LZipper</span> a xs (y<span class="op">:</span>ys')) <span class="ot">=</span> <span class="dt">LZipper</span> y (a<span class="op">:</span>xs) ys'</span>
+<span id="cb5-6"><a href="#cb5-6"></a>zipperMoveR _ <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;Invalid move&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co">-- | get the current focusing element</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="ot">current ::</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb5-10"><a href="#cb5-10"></a>current (<span class="dt">LZipper</span> v _ _) <span class="ot">=</span> v</span></code></pre></div>
 <h2 id="conversion-between-limited-worlds-and-infinite-worlds">Conversion between Limited Worlds and Infinite Worlds</h2>
 <p>To initialize the world we need to convert from a list of cells to a zipper which represents the infinite world. This can be achieved by padding the list to make it infinite in both directions:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | initial world to a zipper</span>
-<span class="ot">rangeToZipper ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
-rangeToZipper v wd <span class="fu">=</span> <span class="kw">case</span> wd <span class="kw">of</span>
-    []   <span class="ot">-&gt;</span> <span class="dt">LZipper</span> v pad pad
-    x<span class="fu">:</span>xs <span class="ot">-&gt;</span> <span class="dt">LZipper</span> x pad (xs <span class="fu">++</span> pad)
-    <span class="kw">where</span>
-        pad <span class="fu">=</span> repeat v</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">-- | initial world to a zipper</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="ot">rangeToZipper ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a</span>
+<span id="cb6-3"><a href="#cb6-3"></a>rangeToZipper v wd <span class="ot">=</span> <span class="kw">case</span> wd <span class="kw">of</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a>    []   <span class="ot">-&gt;</span> <span class="dt">LZipper</span> v pad pad</span>
+<span id="cb6-5"><a href="#cb6-5"></a>    x<span class="op">:</span>xs <span class="ot">-&gt;</span> <span class="dt">LZipper</span> x pad (xs <span class="op">++</span> pad)</span>
+<span id="cb6-6"><a href="#cb6-6"></a>    <span class="kw">where</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>        pad <span class="ot">=</span> <span class="fu">repeat</span> v</span></code></pre></div>
 <p>And to view a portion of the infinite world, we take as argument two coordinates and a zipper (the zipper is assumed to point to the origin point), move the zipper to the position specified by one of the coordinate, and then extract the value of the focus from zipper and keep moving the zipper to the other coordinate.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span>
-<span class="ot">zipperToRange ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> [a]
-zipperToRange (i,j) zp <span class="fu">=</span> fmap current zippers
-    <span class="kw">where</span>
-        zippers <span class="fu">=</span> take (j <span class="fu">-</span> i <span class="fu">+</span> <span class="dv">1</span>) (iterate zipperMoveR startZ)
-        startZ <span class="fu">=</span> zipperMoveFocus i zp
-<span class="ot">        zipperMoveFocus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a
-        zipperMoveFocus t z
-            <span class="fu">|</span> t <span class="fu">&gt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">-</span><span class="dv">1</span>) (zipperMoveR z)
-            <span class="fu">|</span> t <span class="fu">&lt;</span> <span class="dv">0</span>     <span class="fu">=</span> zipperMoveFocus (t<span class="fu">+</span><span class="dv">1</span>) (zipperMoveL z)
-            <span class="fu">|</span> otherwise <span class="fu">=</span> z</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a><span class="co">-- | a view range (coordinates), a zipper to a portion of the world</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="ot">zipperToRange ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> [a]</span>
+<span id="cb7-3"><a href="#cb7-3"></a>zipperToRange (i,j) zp <span class="ot">=</span> <span class="fu">fmap</span> current zippers</span>
+<span id="cb7-4"><a href="#cb7-4"></a>    <span class="kw">where</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>        zippers <span class="ot">=</span> <span class="fu">take</span> (j <span class="op">-</span> i <span class="op">+</span> <span class="dv">1</span>) (<span class="fu">iterate</span> zipperMoveR startZ)</span>
+<span id="cb7-6"><a href="#cb7-6"></a>        startZ <span class="ot">=</span> zipperMoveFocus i zp</span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="ot">        zipperMoveFocus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a <span class="ot">-&gt;</span> <span class="dt">LZipper</span> a</span>
+<span id="cb7-8"><a href="#cb7-8"></a>        zipperMoveFocus t z</span>
+<span id="cb7-9"><a href="#cb7-9"></a>            <span class="op">|</span> t <span class="op">&gt;</span> <span class="dv">0</span>     <span class="ot">=</span> zipperMoveFocus (t<span class="op">-</span><span class="dv">1</span>) (zipperMoveR z)</span>
+<span id="cb7-10"><a href="#cb7-10"></a>            <span class="op">|</span> t <span class="op">&lt;</span> <span class="dv">0</span>     <span class="ot">=</span> zipperMoveFocus (t<span class="op">+</span><span class="dv">1</span>) (zipperMoveL z)</span>
+<span id="cb7-11"><a href="#cb7-11"></a>            <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> z</span></code></pre></div>
 <h2 id="propagation-rules-1">Propagation Rules</h2>
 <p>We modify <code>waveRule</code> function above so that it can produce the next cell state from a zipper. The nice thing about our zipper is that both of the neighboring old cell states can be easily found by pattern matching on arguments.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span>
-waveRule (<span class="dt">LZipper</span> _ (l<span class="fu">:</span>_) (r<span class="fu">:</span>_))
-    <span class="fu">|</span> fromL <span class="fu">&amp;&amp;</span> fromR <span class="fu">=</span> <span class="ch">'X'</span>
-    <span class="fu">|</span> fromL          <span class="fu">=</span> <span class="ch">'&gt;'</span>
-    <span class="fu">|</span> fromR          <span class="fu">=</span> <span class="ch">'&lt;'</span>
-    <span class="fu">|</span> otherwise      <span class="fu">=</span> <span class="ch">' '</span>
-    <span class="kw">where</span>
-        fromL <span class="fu">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span>
-        fromR <span class="fu">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span>
-waveRule _ <span class="fu">=</span> error <span class="st">&quot;null zipper&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a><span class="ot">waveRule ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Char</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>waveRule (<span class="dt">LZipper</span> _ (l<span class="op">:</span>_) (r<span class="op">:</span>_))</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="op">|</span> fromL <span class="op">&amp;&amp;</span> fromR <span class="ot">=</span> <span class="ch">'X'</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>    <span class="op">|</span> fromL          <span class="ot">=</span> <span class="ch">'&gt;'</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>    <span class="op">|</span> fromR          <span class="ot">=</span> <span class="ch">'&lt;'</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a>    <span class="op">|</span> <span class="fu">otherwise</span>      <span class="ot">=</span> <span class="ch">' '</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a>    <span class="kw">where</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a>        fromL <span class="ot">=</span> l <span class="ot">`elem`</span> <span class="st">&quot;&gt;*X&quot;</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a>        fromR <span class="ot">=</span> r <span class="ot">`elem`</span> <span class="st">&quot;&lt;*X&quot;</span></span>
+<span id="cb8-10"><a href="#cb8-10"></a>waveRule _ <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;null zipper&quot;</span></span></code></pre></div>
 <p>And then we rush to complete the main function, assuming <code>nextGen :: LZipper Char -&gt; LZipper Char</code>, a function that takes a zipper and produces a zipper of the next generation. has been implemented for us.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen <span class="fu">=</span> undefined
-
-<span class="ot">main ::</span> <span class="dt">IO</span> ()
-main <span class="fu">=</span> mapM_ (putStrLn <span class="fu">.</span> zipperToRange (<span class="fu">-</span><span class="dv">20</span>,<span class="dv">40</span>)) (take <span class="dv">20</span> (iterate nextGen startZ))
-    <span class="kw">where</span>
-        startStr <span class="fu">=</span> <span class="st">&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</span>
-        startZ <span class="fu">=</span> rangeToZipper <span class="ch">' '</span> startStr</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a>nextGen <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb9-5"><a href="#cb9-5"></a>main <span class="ot">=</span> <span class="fu">mapM_</span> (<span class="fu">putStrLn</span> <span class="op">.</span> zipperToRange (<span class="op">-</span><span class="dv">20</span>,<span class="dv">40</span>)) (<span class="fu">take</span> <span class="dv">20</span> (<span class="fu">iterate</span> nextGen startZ))</span>
+<span id="cb9-6"><a href="#cb9-6"></a>    <span class="kw">where</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a>        startStr <span class="ot">=</span> <span class="st">&quot;*  &gt;  *   *  &lt;  **&lt;&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a>        startZ <span class="ot">=</span> rangeToZipper <span class="ch">' '</span> startStr</span></code></pre></div>
 <p>In the code above, we take 20 generations, view the world within range <code>(-20,40)</code>.</p>
 <h2 id="the-final-missing-piece">The Final Missing Piece</h2>
 <p>The only thing missing in our implementation is the <code>nextGen</code> function, this is also where the magic happens. Let's implement it step by step.</p>
 <p>By taking its type signature into account, we can write down the shape of the body:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> undefined
-        ls' <span class="fu">=</span> undefined
-        rs' <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb10-3"><a href="#cb10-3"></a>    <span class="kw">where</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>        c' <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a>        ls' <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a>        rs' <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <p>And it's not hard to figure out what is <code>c'</code> – the new cell state in correspondence with <code>c</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> waveRule z
-        ls' <span class="fu">=</span> undefined
-        rs' <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb11-3"><a href="#cb11-3"></a>    <span class="kw">where</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a>        c' <span class="ot">=</span> waveRule z</span>
+<span id="cb11-5"><a href="#cb11-5"></a>        ls' <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb11-6"><a href="#cb11-6"></a>        rs' <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <p>To figure out <code>ls'</code>, we first try to figure out the first element of it, namely <code>l'</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> waveRule z
-        l' <span class="fu">=</span> undefined
-        ls' <span class="fu">=</span> l' <span class="fu">:</span> undefined
-        rs' <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb12-3"><a href="#cb12-3"></a>    <span class="kw">where</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a>        c' <span class="ot">=</span> waveRule z</span>
+<span id="cb12-5"><a href="#cb12-5"></a>        l' <span class="ot">=</span> <span class="fu">undefined</span></span>
+<span id="cb12-6"><a href="#cb12-6"></a>        ls' <span class="ot">=</span> l' <span class="op">:</span> <span class="fu">undefined</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a>        rs' <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <p>Since the focus of <code>l'</code> is the direct neighborhood of <code>c</code>, we can simply move the zipper to calculate its new state:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> waveRule z
-        l' <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
-        ls' <span class="fu">=</span> l' <span class="fu">:</span> undefined
-        rs' <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb13-3"><a href="#cb13-3"></a>    <span class="kw">where</span></span>
+<span id="cb13-4"><a href="#cb13-4"></a>        c' <span class="ot">=</span> waveRule z</span>
+<span id="cb13-5"><a href="#cb13-5"></a>        l' <span class="ot">=</span> waveRule <span class="op">.</span> zipperMoveL <span class="op">$</span> z</span>
+<span id="cb13-6"><a href="#cb13-6"></a>        ls' <span class="ot">=</span> l' <span class="op">:</span> <span class="fu">undefined</span></span>
+<span id="cb13-7"><a href="#cb13-7"></a>        rs' <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <p>Comparing <code>c'</code> and <code>l'</code>, we can find the pattern:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> waveRule z
-        l' <span class="fu">=</span> waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z
-        ls' <span class="fu">=</span> [waveRule <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, waveRule <span class="fu">.</span> zipperMoveL <span class="fu">.</span> zipperMoveL <span class="fu">$</span> z, <span class="fu">...</span>]
-        rs' <span class="fu">=</span> undefined</code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb14-3"><a href="#cb14-3"></a>    <span class="kw">where</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>        c' <span class="ot">=</span> waveRule z</span>
+<span id="cb14-5"><a href="#cb14-5"></a>        l' <span class="ot">=</span> waveRule <span class="op">.</span> zipperMoveL <span class="op">$</span> z</span>
+<span id="cb14-6"><a href="#cb14-6"></a>        ls' <span class="ot">=</span> [waveRule <span class="op">.</span> zipperMoveL <span class="op">$</span> z, waveRule <span class="op">.</span> zipperMoveL <span class="op">.</span> zipperMoveL <span class="op">$</span> z, <span class="op">...</span>]</span>
+<span id="cb14-7"><a href="#cb14-7"></a>        rs' <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
 <p>And the same pattern holds for <code>rs'</code>: we just keep moving the zipper to its left or right, and produce new states by applying <code>waveRule</code> to it. So we end up with:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span>
-nextGen z <span class="fu">=</span> <span class="dt">LZipper</span> c' ls' rs'
-    <span class="kw">where</span>
-        c' <span class="fu">=</span> waveRule z
-        ls' <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveL z
-        rs' <span class="fu">=</span> map waveRule <span class="fu">.</span> tail <span class="fu">$</span> iterate zipperMoveR z</code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1"></a><span class="ot">nextGen ::</span> <span class="dt">LZipper</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">LZipper</span> <span class="dt">Char</span></span>
+<span id="cb15-2"><a href="#cb15-2"></a>nextGen z <span class="ot">=</span> <span class="dt">LZipper</span> c' ls' rs'</span>
+<span id="cb15-3"><a href="#cb15-3"></a>    <span class="kw">where</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>        c' <span class="ot">=</span> waveRule z</span>
+<span id="cb15-5"><a href="#cb15-5"></a>        ls' <span class="ot">=</span> <span class="fu">map</span> waveRule <span class="op">.</span> <span class="fu">tail</span> <span class="op">$</span> <span class="fu">iterate</span> zipperMoveL z</span>
+<span id="cb15-6"><a href="#cb15-6"></a>        rs' <span class="ot">=</span> <span class="fu">map</span> waveRule <span class="op">.</span> <span class="fu">tail</span> <span class="op">$</span> <span class="fu">iterate</span> zipperMoveR z</span></code></pre></div>
 <p>Now the whole program should be complete, if you run it, you will get something like this:</p>
 <pre><code>                    *  &gt;  *   *  &lt;  **&lt;                      
                    &lt; &gt;  &gt;&lt; &gt; &lt; &gt;&lt;  &lt;&lt;X&gt;                      

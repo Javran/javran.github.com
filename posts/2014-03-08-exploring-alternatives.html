@@ -83,55 +83,55 @@
 <p>As always, <strong>bold sentences</strong> stands for my intuitions.</p>
 <h1 id="a-monoid-on-applicative-functors">“a monoid on applicative functors”</h1>
 <p><code>Alternative</code> is a typeclass lied in <code>Control.Applicative</code>, most of the time, I import this package to use functions like <code>&lt;$&gt;</code>, <code>&lt;*&gt;</code> and data type <code>ZipList</code>, but no more. I happened to heard this typeclass by a quick scan on typeclassopedia, and there are only few functions related to it, which I think might not take much time to try them all. These are all motivations about this article.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Applicative</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">import</span> <span class="dt">Control.Applicative</span></span></code></pre></div>
 <p>First function in this class is called <code>empty</code>, so I guess <strong><code>Alternative</code> is some typeclass that allows containing nothing</strong>. This would explain why there are so many <code>Applicative</code>s but I can only see <code>[]</code> and <code>Maybe</code> being instances of this typeclass.</p>
 <p>The document says <code>Alternative</code> is “a monoid on applicative functors”. So we can make an analogy between <code>(mempty, mappend)</code> from <code>Monoid</code> and <code>(empty, &lt;|&gt;)</code> from <code>Alternative</code>. Let's try it out:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v1 ::</span> [<span class="dt">String</span>]
-v1 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty
-
-<span class="ot">v2 ::</span> [<span class="dt">String</span>]
-v2 <span class="fu">=</span> v1 <span class="fu">&lt;|&gt;</span> pure <span class="st">&quot;foo&quot;</span> <span class="fu">&lt;|&gt;</span> pure <span class="st">&quot;bar&quot;</span>
-
-<span class="ot">v3 ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
-v3 <span class="fu">=</span> pure <span class="dv">10</span> <span class="fu">&lt;|&gt;</span> pure <span class="dv">20</span>
-
-<span class="ot">v4 ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span>
-v4 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> pure <span class="ch">'A'</span> <span class="fu">&lt;|&gt;</span> undefined
-
-<span class="ot">v5 ::</span> <span class="dt">Maybe</span> ()
-v5 <span class="fu">=</span> empty <span class="fu">&lt;|&gt;</span> empty <span class="fu">&lt;|&gt;</span> empty</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1"></a><span class="ot">v1 ::</span> [<span class="dt">String</span>]</span>
+<span id="cb2-2"><a href="#cb2-2"></a>v1 <span class="ot">=</span> empty <span class="op">&lt;|&gt;</span> empty <span class="op">&lt;|&gt;</span> empty</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="ot">v2 ::</span> [<span class="dt">String</span>]</span>
+<span id="cb2-5"><a href="#cb2-5"></a>v2 <span class="ot">=</span> v1 <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> <span class="st">&quot;foo&quot;</span> <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> <span class="st">&quot;bar&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="ot">v3 ::</span> <span class="dt">Maybe</span> <span class="dt">Int</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>v3 <span class="ot">=</span> <span class="fu">pure</span> <span class="dv">10</span> <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> <span class="dv">20</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="ot">v4 ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a>v4 <span class="ot">=</span> empty <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> <span class="ch">'A'</span> <span class="op">&lt;|&gt;</span> <span class="fu">undefined</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="ot">v5 ::</span> <span class="dt">Maybe</span> ()</span>
+<span id="cb2-14"><a href="#cb2-14"></a>v5 <span class="ot">=</span> empty <span class="op">&lt;|&gt;</span> empty <span class="op">&lt;|&gt;</span> empty</span></code></pre></div>
 <p>Let's bring up GHCi:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v1
-[]
-λ<span class="fu">&gt;</span> v2
-[<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>]
-λ<span class="fu">&gt;</span> v3
-<span class="dt">Just</span> <span class="dv">10</span>
-λ<span class="fu">&gt;</span> v4
-<span class="dt">Just</span> <span class="ch">'A'</span>
-λ<span class="fu">&gt;</span> v5
-<span class="dt">Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1"></a>λ<span class="op">&gt;</span> v1</span>
+<span id="cb3-2"><a href="#cb3-2"></a>[]</span>
+<span id="cb3-3"><a href="#cb3-3"></a>λ<span class="op">&gt;</span> v2</span>
+<span id="cb3-4"><a href="#cb3-4"></a>[<span class="st">&quot;foo&quot;</span>,<span class="st">&quot;bar&quot;</span>]</span>
+<span id="cb3-5"><a href="#cb3-5"></a>λ<span class="op">&gt;</span> v3</span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="dt">Just</span> <span class="dv">10</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>λ<span class="op">&gt;</span> v4</span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="dt">Just</span> <span class="ch">'A'</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>λ<span class="op">&gt;</span> v5</span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="dt">Nothing</span></span></code></pre></div>
 <p><code>empty</code> works like what we expected, and <code>&lt;|&gt;</code> for lists seems straightforward. But when it comes to <code>Maybe</code>, we find that only the first non-<code>Nothing</code> one takes effect, if any.</p>
 <h1 id="some-and-many"><code>some</code> and <code>many</code></h1>
 <p>The type for <code>some</code> and <code>many</code> are identical, so just fill in some instances I come up with on the fly:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]
-v6 <span class="fu">=</span> some [<span class="st">&quot;not working&quot;</span>]
-
-<span class="ot">v7 ::</span> [[<span class="dt">String</span>]]
-v7 <span class="fu">=</span> some empty</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1"></a><span class="ot">v6 ::</span> [[<span class="dt">String</span>]]</span>
+<span id="cb4-2"><a href="#cb4-2"></a>v6 <span class="ot">=</span> some [<span class="st">&quot;not working&quot;</span>]</span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="ot">v7 ::</span> [[<span class="dt">String</span>]]</span>
+<span id="cb4-5"><a href="#cb4-5"></a>v7 <span class="ot">=</span> some empty</span></code></pre></div>
 <p>But when I try this out on GHCi, something is going wrong:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> v6
-<span class="fu">^</span><span class="dt">CInterrupted</span><span class="fu">.</span>
-λ<span class="fu">&gt;</span> v7
-[]</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1"></a>λ<span class="op">&gt;</span> v6</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="op">^</span><span class="dt">CInterrupted</span><span class="op">.</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>λ<span class="op">&gt;</span> v7</span>
+<span id="cb5-4"><a href="#cb5-4"></a>[]</span></code></pre></div>
 <p>I gave <code>v6</code> some time to run but it didn't terminate, so I cancelled it by hand.</p>
 <p>By looking at the document, I find some clue: <code>some</code> and <code>many</code> seem to look for some solutions to the following equations:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">some v <span class="fu">=</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> v <span class="fu">&lt;*&gt;</span> many v
-many v <span class="fu">=</span> some v <span class="fu">&lt;|&gt;</span> pure []
-
-<span class="co">-- rewrite to break the recursive relation will help?</span>
-some v <span class="fu">=</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> v <span class="fu">&lt;*&gt;</span> (some v <span class="fu">&lt;|&gt;</span> pure [])
-many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">$</span>) v <span class="fu">&lt;*&gt;</span> many v) <span class="fu">&lt;|&gt;</span> pure []</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1"></a>some v <span class="ot">=</span> (<span class="op">:</span>) <span class="op">&lt;$&gt;</span> v <span class="op">&lt;*&gt;</span> many v</span>
+<span id="cb6-2"><a href="#cb6-2"></a>many v <span class="ot">=</span> some v <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> []</span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">-- rewrite to break the recursive relation will help?</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a>some v <span class="ot">=</span> (<span class="op">:</span>) <span class="op">&lt;$&gt;</span> v <span class="op">&lt;*&gt;</span> (some v <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> [])</span>
+<span id="cb6-6"><a href="#cb6-6"></a>many v <span class="ot">=</span> ((<span class="op">:</span>) (<span class="op">$</span>) v <span class="op">&lt;*&gt;</span> many v) <span class="op">&lt;|&gt;</span> <span class="fu">pure</span> []</span></code></pre></div>
 <p>I can't go any further from here, but doing some research, I find the following links that might help, but for now I just leave this two functions as mysteries. (Maybe it's just something like <a href="http://hackage.haskell.org/package/base-4.6.0.1/docs/Data-Function.html#v:fix"><code>fix</code></a>, interesting, but IMHO not useful ).</p>
 <p>Related links:</p>
 <ul>
@@ -141,27 +141,27 @@ many v <span class="fu">=</span> ((<span class="fu">:</span>) (<span class="fu">
 <h1 id="optional"><code>optional</code></h1>
 <p>For the rest of the story, I'll just type them directly into GHCi.</p>
 <p>The last function about <code>Alternative</code> is <code>optional</code>, Let's check its type and feed it with some instances:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t optional
-<span class="ot">optional ::</span> <span class="dt">Alternative</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ<span class="fu">&gt;</span> optional <span class="dt">Nothing</span>
-<span class="dt">Just</span> <span class="dt">Nothing</span>
-λ<span class="fu">&gt;</span> optional <span class="fu">$</span> <span class="dt">Just</span> <span class="dv">1</span>
-<span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ<span class="fu">&gt;</span> optional []
-[<span class="dt">Nothing</span>]
-λ<span class="fu">&gt;</span> optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
-[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t optional</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="ot">optional ::</span> <span class="dt">Alternative</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)</span>
+<span id="cb7-3"><a href="#cb7-3"></a>λ<span class="op">&gt;</span> optional <span class="dt">Nothing</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="dt">Just</span> <span class="dt">Nothing</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>λ<span class="op">&gt;</span> optional <span class="op">$</span> <span class="dt">Just</span> <span class="dv">1</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)</span>
+<span id="cb7-7"><a href="#cb7-7"></a>λ<span class="op">&gt;</span> optional []</span>
+<span id="cb7-8"><a href="#cb7-8"></a>[<span class="dt">Nothing</span>]</span>
+<span id="cb7-9"><a href="#cb7-9"></a>λ<span class="op">&gt;</span> optional [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]</span>
+<span id="cb7-10"><a href="#cb7-10"></a>[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>,<span class="dt">Nothing</span>]</span></code></pre></div>
 <p>Wait a minute, is <code>f a -&gt; f (Maybe a)</code> looks familiar to you? It looks like an unary function that has type <code>a -&gt; Maybe a</code> under some contexts. I think the simplest expression that matches this type would be <code>(Just &lt;$&gt;)</code>. Let's do the same thing on it.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">λ<span class="fu">&gt;</span> <span class="fu">:</span>t (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)
-(<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>)<span class="ot"> ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)
-λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Nothing</span>
-<span class="dt">Nothing</span>
-λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span>
-<span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)
-λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) []
-[]
-λ<span class="fu">&gt;</span> (<span class="dt">Just</span> <span class="fu">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
-[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1"></a>λ<span class="op">&gt;</span> <span class="op">:</span>t (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2"></a>(<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>)<span class="ot"> ::</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> f a <span class="ot">-&gt;</span> f (<span class="dt">Maybe</span> a)</span>
+<span id="cb8-3"><a href="#cb8-3"></a>λ<span class="op">&gt;</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>) <span class="dt">Nothing</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="dt">Nothing</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>λ<span class="op">&gt;</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>) <span class="dt">Just</span> <span class="dv">1</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="dt">Just</span> (<span class="dt">Just</span> <span class="dv">1</span>)</span>
+<span id="cb8-7"><a href="#cb8-7"></a>λ<span class="op">&gt;</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>) []</span>
+<span id="cb8-8"><a href="#cb8-8"></a>[]</span>
+<span id="cb8-9"><a href="#cb8-9"></a>λ<span class="op">&gt;</span> (<span class="dt">Just</span> <span class="op">&lt;$&gt;</span>) [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]</span>
+<span id="cb8-10"><a href="#cb8-10"></a>[<span class="dt">Just</span> <span class="dv">1</span>,<span class="dt">Just</span> <span class="dv">2</span>,<span class="dt">Just</span> <span class="dv">3</span>]</span></code></pre></div>
 <p>Comparing the output of <code>optional</code> and <code>(Just &lt;$&gt;)</code>, we find that <code>optional</code> will attach an <code>empty</code> to the end of this monoid. And that <code>empty</code> would be the “none” part from <code>optional</code>'s description: “One or none”. In addition, we've seen <code>&lt;|&gt;</code> is the binary operation for this monoid, so we can have a guess:</p>
 <pre><code>optional v = (Just &lt;$&gt; v) &lt;|&gt; pure Nothing</code></pre>
 <p>And this turns out to be the exact implementation.</p>
